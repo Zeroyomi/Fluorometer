@@ -1,0 +1,35 @@
+<SettingsButton@Button>:
+	font_size:28
+	background_normal:''
+	background_color:'#2183b8'
+	size_hint:0.5,1
+	pos_hint: {'center_x':.5, 'center_y':.5} 
+	
+ShowcaseScreen:
+    name: 'settings'
+    #fullscreen: True
+	
+    BoxLayout:
+		orientation: "vertical"
+		padding:20
+		spacing:30
+
+        SettingsButton:
+            text: 'Instrument settings'
+            on_release: on_press:app.go_screen('Instrument')
+		
+		SettingsButton:
+            text: 'Blue Led Test'
+            on_release:app.blue_led_test() 
+			
+		SettingsButton:
+            text: 'Red Led Test'
+            on_release:app.red_led_test() 
+			
+		SettingsButton:
+            text: 'ADC Test'
+            on_release:app.adc_test() 	
+			
+		SettingsButton:
+            text: 'ADC diff'
+            on_release: app.adc_diff()	

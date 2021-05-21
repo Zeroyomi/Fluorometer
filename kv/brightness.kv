@@ -1,0 +1,28 @@
+ShowcaseScreen:
+    name: 'Brightness'
+    #fullscreen: True
+	
+	BoxLayout:
+		orientation: "vertical"
+		padding:50
+		spacing:30
+		
+		Label:
+			text:'Set Brightness'
+			font_size:36
+			size_hint:(1,0.2)
+			
+		Slider:
+			min:50
+			max:255
+			step:1
+			id: bright
+			orientation: 'horizontal'
+			value:int(app.brightness)
+			on_value:app.brightness_control(*args)
+			
+		Label:
+			id:brightness_value
+			text:'{}'.format(bright.value)
+			font_size:36
+			size_hint:(1,0.2)	

@@ -1,0 +1,45 @@
+
+
+ShowcaseScreen:
+	id:flo_screen
+    name: 'fluorometer'
+    fullscreen: True
+	BoxLayout:
+		orientation: "vertical"
+		padding:20
+		spacing:30
+		BoxLayout:
+			size_hint_y:0.3
+			orientation: "horizontal"
+			padding:20
+			spacing:30
+			Label:
+				
+				text:'{}'.format(app.flo_read[0])
+				font_size:60
+			Label:
+				
+				text:'{}'.format(app.flo_read[1])
+				font_size:60
+			Label:
+				
+				text:'{}'.format(app.flo_read[2])
+				font_size:60		
+				
+		BoxLayout:
+			size_hint_y:0.7
+			orientation: "horizontal"
+			padding:20
+			spacing:30		
+			Button:
+				text:"No LED"
+				font_size:30
+				on_release: app.adc_aver()
+			Button:
+				text:"Always On"
+				font_size:30
+				on_release: app.adc_aver_with_led()
+			Button:
+				text:"LED Blink"
+				font_size:30
+				on_release: app.adc_aver_with_blink()	
