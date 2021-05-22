@@ -9,11 +9,11 @@ ShowcaseScreen:
 		Button:
 			text:"Read Sample"
 			font_size:30
-			#on_release: app.adc_aver()
+			on_release: app.go_screen('DNA Broad Range')
 		Button:
 			text:"Read Standard"
 			font_size:30
-			#on_release: app.adc_aver_with_led()
+			on_release: app.go_screen('Read Standard')
 		Label:
 			text:"Last read standards"
 			font_size:20	

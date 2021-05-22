@@ -1,5 +1,5 @@
-import board
-import busio
+#import board
+#import busio
 import time
 
 from kivy.app import App
@@ -14,9 +14,9 @@ from kivy.core.window import Window
 
 #hardware
 
-import adafruit_tlc59711
-import adafruit_ads1x15.ads1115 as ADS
-from adafruit_ads1x15.analog_in import AnalogIn
+#import adafruit_tlc59711
+#import adafruit_ads1x15.ads1115 as ADS
+#from adafruit_ads1x15.analog_in import AnalogIn
 
 class ShowcaseScreen(Screen):
     #fullscreen = BooleanProperty(False)
@@ -32,8 +32,10 @@ class ShowcaseApp(App):
     flo_read = ListProperty([0,0,0])
     hierarchy_index = ListProperty([])
     brightness ='255'
-    led_on = False
+    led_red_on = False
+    led_blue_on = False
     adc_gain = 1
+    unit = NumericProperty(1)
     #adc_loop = False
     try:
         spi = busio.SPI(board.SCK, MOSI=board.MOSI)
@@ -65,7 +67,7 @@ class ShowcaseApp(App):
     
     def build(self):
         self.root = Builder.load_file('kv/main.kv')
-        self.title = 'My appname'
+        self.title = 'Fluorometer'
         Window.size = (800, 480)
         
         #self.go_home()
@@ -75,6 +77,7 @@ class ShowcaseApp(App):
         self.root.ids.sm.switch_to(screen, direction='right')
         self.root.ids.main_label.text = 'Choose an assay'
         self.root.ids.back_btn.disabled=True
+        
     def go_home(self):
 
         if (len(self.hierarchy_index) == 1) and (self.hierarchy_index[0] == 'home'):
@@ -143,7 +146,17 @@ class ShowcaseApp(App):
     def load_screen(self, screen_name):
         screen = Builder.load_file("./kv/{0}.kv".format(screen_name))
         return screen
-        
+    
+#-----------------------------Settings---------------------------------
+    def brightness_control(self, *args):
+        self.brightness = str(int(args[1]))
+        try:
+            file = open("/sys/class/backlight/rpi_backlight/brightness","w")
+            file.write(self.brightness)
+            file.close()
+        except:
+            print('Brightness error')
+            
     def blue_led_test(self):
         try:
             print("SCK, MOSI:")
@@ -151,15 +164,15 @@ class ShowcaseApp(App):
             print(board.MOSI)
             #spi = busio.SPI(board.SCK, MOSI=board.MOSI)
             #leds = adafruit_tlc59711.TLC59711(self.spi, auto_show=False)
-            if self.led_on:
+            if self.led_blue_on:
                 self.leds[0] = (0, 0, 0)
-                self.led_on = False
+                self.led_blue_on = False
                 self.leds.show()
                 print('Blue Led off')
                 return
             else:
-                self.leds[0] = (32767, 32767, 32767)
-                self.led_on = True
+                self.leds[0] = (65535, 65535, 65535)
+                self.led_blue_on = True
                 self.leds.show()
                 print('Blue Led on')
                 return
@@ -171,15 +184,15 @@ class ShowcaseApp(App):
         print(board.SCK)
         print(board.MOSI)
         #leds = adafruit_tlc59711.TLC59711(self.spi, auto_show=False)
-        if self.led_on:
+        if self.led_red_on:
             self.leds[1] = (0, 0, 0)
-            self.led_on = False
+            self.led_red_on = False
             self.leds.show()
             print('Red Led off')
             return
         else:
-            self.leds[1] = (32767, 32767, 32767)
-            self.led_on = True
+            self.leds[1] = (65535, 65535, 65535)
+            self.led_red_on = True
             self.leds.show()
             print('Red Led on')
             return                           
@@ -236,6 +249,7 @@ class ShowcaseApp(App):
         except:
             print('ADC diff test failed')
             
+#-----------------------------Fluorometer---------------------------------            
     def adc_aver(self):
         try:
             chan1sum = 0
@@ -327,15 +341,12 @@ class ShowcaseApp(App):
             #self.root.ids.flo_read3.text = '{0}'.format(str(chan1sum/10))
         except:
             print('ADC average blink failed')
-        
-    def brightness_control(self, *args):
-        self.brightness = str(int(args[1]))
-        try:
-            file = open("/sys/class/backlight/rpi_backlight/brightness","w")
-            file.write(self.brightness)
-            file.close()
-        except:
-            print('Brightness error')
+            
+    def read_standard(self):
+        print('read stadndard')
+
+    def read_tube(self):
+        print('read tube')
         
         
         

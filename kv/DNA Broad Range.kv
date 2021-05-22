@@ -4,44 +4,51 @@ ShowcaseScreen:
 	
 	BoxLayout:
 		orientation: "vertical"
-		padding:50
+		padding:20
 		spacing:30
 		
 		Label:
 			text:'Enter original sample volume'
-			font_size:36
+			font_size:24
 			size_hint:(1,0.2)
 			
 		Label:
 			id:brightness_value
 			text:'{}'.format(bright.value)
-			font_size:36
-			size_hint:(1,0.2)	
+			font_size:16
+			size_hint:(1,0.1)	
 			
 		Slider:
-			min:50
-			max:255
+			min:1
+			max:20
 			step:1
+			value:2
+			size_hint:(1,0.2)
 			id: bright
 			orientation: 'horizontal'
-			value:int(app.brightness)
 			on_value:
 			
 		Label:
 			id:brightness_value
 			text:'Output sample units'
-			font_size:36
-			size_hint:(1,0.2)
-		
+			font_size:16
+			size_hint:(1,0.1)
+			
+			
 		Spinner:
 			id:s_dna_units
+			size_hint:(1,0.2)
 			text: 'ng/μL'
 			values: ('ng/μL', 'ng/ML', 'μg/μL', 'μg/mL', 'mg/mL')
-			#size_hint_y: None
 			on_text: 
-				if s_contrast.text == "BT.709-2": root.spinner_contrast(0)
-				elif s_contrast.text == "BT.709-1": root.spinner_contrast(1)
-				elif s_contrast.text == "BT.709": root.spinner_contrast(2)
-				elif s_contrast.text == "BT.709+1": root.spinner_contrast(3)
-				elif s_contrast.text == "BT.709+2": root.spinner_contrast(4)
-			
+				if s_dna_units.text == "ng/μL": app.unit = 1
+				elif s_dna_units.text == "ng/ML": app.unit = 10
+				elif s_dna_units.text == "μg/μL": app.unit = 100
+				elif s_dna_units.text == "μg/mL": app.unit = 1000
+				elif s_dna_units.text == "mg/mL": app.unit = 10000
+		
+		Button:
+			text: 'Read tube'
+			size_hint:(1,0.2)
+			font_size:30
+			on_release:app.read_tube()

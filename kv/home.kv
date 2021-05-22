@@ -18,7 +18,9 @@ ShowcaseScreen:
 			spacing:35
 			
 			
-			HomeButton:
+			Button:
+				size_hint: (1, None)
+				height:self.width
 				background_normal:'./images/DNA.png'
 				background_down:'./images/DNA_press.png'   
 				on_release:app.go_screen('Read Standard DNA')
