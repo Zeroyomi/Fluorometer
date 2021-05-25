@@ -36,6 +36,7 @@ class ShowcaseApp(App):
     led_blue_on = False
     adc_gain = 1
     unit = NumericProperty(1)
+    home_screen = Builder.load_file("./kv/home.kv")
     #adc_loop = False
     try:
         spi = busio.SPI(board.SCK, MOSI=board.MOSI)
@@ -73,8 +74,8 @@ class ShowcaseApp(App):
         #self.go_home()
         self.hierarchy_index.append('home')
         print(self.hierarchy_index)
-        screen = Builder.load_file("./kv/home.kv")
-        self.root.ids.sm.switch_to(screen, direction='right')
+        #screen = Builder.load_file("./kv/home.kv")
+        self.root.ids.sm.switch_to(self.home_screen, direction='right')
         self.root.ids.main_label.text = 'Choose an assay'
         self.root.ids.back_btn.disabled=True
         
@@ -85,8 +86,8 @@ class ShowcaseApp(App):
         del self.hierarchy_index[:]
         self.hierarchy_index.append('home')
         print(self.hierarchy_index)
-        screen = Builder.load_file("./kv/home.kv")
-        self.root.ids.sm.switch_to(screen, direction='right')
+        #screen = Builder.load_file("./kv/home.kv")
+        self.root.ids.sm.switch_to(self.home_screen, direction='right')
         self.root.ids.main_label.text = 'Choose an assay'
         self.root.ids.back_btn.disabled=True
 
