@@ -1,6 +1,9 @@
-#import board
-#import busio
+import board
+import busio
+
 import time
+import configparser
+
 
 from kivy.app import App
 
@@ -14,9 +17,9 @@ from kivy.core.window import Window
 
 #hardware
 
-#import adafruit_tlc59711
-#import adafruit_ads1x15.ads1115 as ADS
-#from adafruit_ads1x15.analog_in import AnalogIn
+import adafruit_tlc59711
+import adafruit_ads1x15.ads1115 as ADS
+from adafruit_ads1x15.analog_in import AnalogIn
 
 class ShowcaseScreen(Screen):
     #fullscreen = BooleanProperty(False)
@@ -28,13 +31,20 @@ class ShowcaseScreen(Screen):
 
 
 class ShowcaseApp(App):
+    #kivy properties
     brightness = StringProperty()
     flo_read = ListProperty([0,0,0])
     hierarchy_index = ListProperty([])
-    brightness ='255'
+    DNA_result = StringProperty()
+    #config
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+    
+    #brightness =config['BASIC']['brightness']
     led_red_on = False
     led_blue_on = False
     adc_gain = 1
+    sample_rate = 8
     unit = NumericProperty(1)
     home_screen = Builder.load_file("./kv/home.kv")
     #adc_loop = False
@@ -55,7 +65,7 @@ class ShowcaseApp(App):
     except:
         print('>>>>>>>>>>>>>>>i2c init failed<<<<<<<<<<<<<<<<<<<')
     try:
-        ads = ADS.ADS1115(i2c, gain=adc_gain, data_rate=8, address=0x48)
+        ads = ADS.ADS1115(i2c, gain=adc_gain, data_rate=sample_rate, address=0x48)
     except:
         print('>>>>>>>>>>>>>>>ads init failed<<<<<<<<<<<<<<<<<<<')        
        
@@ -345,9 +355,23 @@ class ShowcaseApp(App):
             
     def read_standard(self):
         print('read stadndard')
-
+        fake_read = 400
+        ShowcaseApp.config['DNA']['v'] = str(fake_read)
+        with open('config.ini', 'w') as configfile:
+            ShowcaseApp.config.write(configfile)
     def read_tube(self):
-        print('read tube')
+        fake_read = 459.40
+        k = float(ShowcaseApp.config['DNA']['k'])
+        g = float(ShowcaseApp.config['DNA']['g'])
+        #r = float(ShowcaseApp.config['DNA']['r'])
+        n = float(ShowcaseApp.config['DNA']['n'])
+        v = float(ShowcaseApp.config['DNA']['v'])
+        s = float(ShowcaseApp.config['DNA']['s'])
+        print(v)
+        r = (v-g)*((pow(s,n)+k)/pow(s,n))
+        ShowcaseApp.DNA_result = str(pow(k*(fake_read - g)/(r-(fake_read-g)), 1/n))
+        #print(ShowcaseApp.DNA_result)
+        self.go_screen('DNA Result')
         
         
         

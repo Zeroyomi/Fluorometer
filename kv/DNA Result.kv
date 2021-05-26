@@ -1,0 +1,27 @@
+ShowcaseScreen:
+    name: 'DNA'
+    fullscreen: True
+	BoxLayout:
+		orientation: "vertical"
+		padding:60
+		spacing:20
+		BoxLayout:	
+			orientation: "vertical"
+			size_hint:1,0.8
+			Label:
+				text:"Result"
+				font_size:36
+				
+			Label:
+				text:'{}'.format(app.DNA_result)
+				font_size:36
+				
+		BoxLayout:	
+			size_hint:1,0.2
+			spacing:40
+			orientation: "horizontal"
+			
+			Button:
+				text:"Start New"
+				font_size:30
+				on_release:app.read_standard()
