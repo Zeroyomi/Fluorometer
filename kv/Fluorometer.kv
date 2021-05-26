@@ -9,7 +9,7 @@ ShowcaseScreen:
 		padding:20
 		spacing:30
 		BoxLayout:
-			size_hint_y:0.3
+			size_hint_y:0.2
 			orientation: "horizontal"
 			padding:20
 			spacing:30
@@ -27,7 +27,7 @@ ShowcaseScreen:
 				font_size:60		
 				
 		BoxLayout:
-			size_hint_y:0.7
+			size_hint_y:0.4
 			orientation: "horizontal"
 			padding:20
 			spacing:30		
@@ -42,4 +42,40 @@ ShowcaseScreen:
 			Button:
 				text:"LED Blink"
 				font_size:30
-				on_release: app.adc_aver_with_blink()	
+				on_release: app.adc_aver_with_blink()
+				
+		GridLayout:		
+			spacing:30
+			rows:2
+			cols:2
+			size_hint_y:0.4
+			Label:
+				text:'adc gain'
+				font_size:18		
+			Label:
+				text:'sample rate'
+				font_size:18			
+			Spinner:
+				id:s_gain
+				text: '1'
+				values: ('1', '2', '4', '8','16')
+				on_text: 
+					if s_gain.text == "1": app.adc_gain = '1'
+					elif s_gain.text == "2": app.adc_gain = '2'
+					elif s_gain.text == "4": app.adc_gain = '4'
+					elif s_gain.text == "8": app.adc_gain = '8'
+					elif s_gain.text == "16": app.adc_gain = '16'
+				
+			Spinner:
+				id:s_sample_rate
+				text: '8'
+				values: ('8', '16', '32', '64', '128','250','475','860')
+				on_text: 
+					if s_sample_rate.text == "8": app.sample_rate = '8'
+					elif s_sample_rate.text == "16": app.sample_rate = '16'
+					elif s_sample_rate.text == "32": app.sample_rate = '32'
+					elif s_sample_rate.text == "64": app.sample_rate = '64'
+					elif s_sample_rate.text == "128": app.sample_rate = '128'
+					elif s_sample_rate.text == "250": app.sample_rate = '250'
+					elif s_sample_rate.text == "475": app.sample_rate = '475'
+					elif s_sample_rate.text == "860": app.sample_rate = '860'

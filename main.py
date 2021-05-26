@@ -36,6 +36,8 @@ class ShowcaseApp(App):
     flo_read = ListProperty([0,0,0])
     hierarchy_index = ListProperty([])
     DNA_result = StringProperty()
+    adc_gain = StringProperty()
+    sample_rate = StringProperty()
     #config
     config = configparser.ConfigParser()
     config.read('config.ini')
@@ -43,8 +45,8 @@ class ShowcaseApp(App):
     #brightness =config['BASIC']['brightness']
     led_red_on = False
     led_blue_on = False
-    adc_gain = 1
-    sample_rate = 8
+    adc_gain = '1'
+    sample_rate = '8'
     unit = NumericProperty(1)
     home_screen = Builder.load_file("./kv/home.kv")
     #adc_loop = False
@@ -64,10 +66,10 @@ class ShowcaseApp(App):
         i2c = busio.I2C(board.SCL, board.SDA)
     except:
         print('>>>>>>>>>>>>>>>i2c init failed<<<<<<<<<<<<<<<<<<<')
-    try:
-        ads = ADS.ADS1115(i2c, gain=adc_gain, data_rate=sample_rate, address=0x48)
-    except:
-        print('>>>>>>>>>>>>>>>ads init failed<<<<<<<<<<<<<<<<<<<')        
+    #try:
+        #ads = ADS.ADS1115(i2c, gain=adc_gain, data_rate=sample_rate, address=0x48)
+    #except:
+        #print('>>>>>>>>>>>>>>>ads init failed<<<<<<<<<<<<<<<<<<<')        
        
     try:
         file = open("/sys/class/backlight/rpi_backlight/brightness","r")
@@ -211,11 +213,13 @@ class ShowcaseApp(App):
 
     def adc_test(self):
         try: 
-            
+            gain_input = float(self.adc_gain)
+            sample_rate_input = float(self.sample_rate)
+            ads = ADS.ADS1115(self.i2c,gain=gain_input , data_rate=sample_rate_input, address=0x48)
             #chan0 = AnalogIn(ads, ADS.P0)
-            chan1 = AnalogIn(self.ads, ADS.P1)
-            chan2 = AnalogIn(self.ads, ADS.P2)
-            chan3 = AnalogIn(self.ads, ADS.P3)
+            chan1 = AnalogIn(ads, ADS.P1)
+            chan2 = AnalogIn(ads, ADS.P2)
+            chan3 = AnalogIn(ads, ADS.P3)
             #print("{:>5}\t{:>5.3f}".format(chan0.value, chan0.voltage))
             while True:
                 #print("channel 01 {:>5}\t{:>5.3f}".format(chan3.value, chan3.voltage))
@@ -233,9 +237,12 @@ class ShowcaseApp(App):
             
     def adc_diff(self):
         try:
-            chan1 = AnalogIn(self.ads, ADS.P1)
-            chan2 = AnalogIn(self.ads, ADS.P2)
-            chan3 = AnalogIn(self.ads, ADS.P3)
+            gain_input = float(self.adc_gain)
+            sample_rate_input = float(self.sample_rate)
+            ads = ADS.ADS1115(self.i2c,gain=gain_input , data_rate=sample_rate_input, address=0x48)
+            chan1 = AnalogIn(ads, ADS.P1)
+            chan2 = AnalogIn(ads, ADS.P2)
+            chan3 = AnalogIn(ads, ADS.P3)
             adc01 = chan3.value
             adc02 = chan2.value
             adc03 = chan1.value
@@ -263,12 +270,15 @@ class ShowcaseApp(App):
 #-----------------------------Fluorometer---------------------------------            
     def adc_aver(self):
         try:
+            gain_input = float(self.adc_gain)
+            sample_rate_input = float(self.sample_rate)
+            ads = ADS.ADS1115(self.i2c,gain=gain_input , data_rate=sample_rate_input, address=0x48)
             chan1sum = 0
             chan2sum = 0
             chan3sum = 0
-            chan1 = AnalogIn(self.ads, ADS.P1)
-            chan2 = AnalogIn(self.ads, ADS.P2)
-            chan3 = AnalogIn(self.ads, ADS.P3)
+            chan1 = AnalogIn(ads, ADS.P1)
+            chan2 = AnalogIn(ads, ADS.P2)
+            chan3 = AnalogIn(ads, ADS.P3)
             for i in range(10):
                 chan1read = chan1.value
                 chan2read = chan2.value
@@ -284,20 +294,24 @@ class ShowcaseApp(App):
             self.flo_read[0] = str(chan3sum/10)
             self.flo_read[1] = str(chan2sum/10)
             self.flo_read[2] = str(chan1sum/10)
+           
         except:
             print('ADC average test failed')
             
     def adc_aver_with_led(self):
         try:
+            gain_input = float(self.adc_gain)
+            sample_rate_input = float(self.sample_rate)
+            ads = ADS.ADS1115(self.i2c,gain=gain_input , data_rate=sample_rate_input, address=0x48)
             self.leds[0] = (32767, 32767, 32767)
             self.leds.show()
             time.sleep(0.3)
             chan1sum = 0
             chan2sum = 0
             chan3sum = 0
-            chan1 = AnalogIn(self.ads, ADS.P1)
-            chan2 = AnalogIn(self.ads, ADS.P2)
-            chan3 = AnalogIn(self.ads, ADS.P3)
+            chan1 = AnalogIn(ads, ADS.P1)
+            chan2 = AnalogIn(ads, ADS.P2)
+            chan3 = AnalogIn(ads, ADS.P3)
             for i in range(10):
                 chan1read = chan1.value
                 chan2read = chan2.value
@@ -321,12 +335,15 @@ class ShowcaseApp(App):
     def adc_aver_with_blink(self):
         
         try:
+            gain_input = float(self.adc_gain)
+            sample_rate_input = float(self.sample_rate)
+            ads = ADS.ADS1115(self.i2c,gain=gain_input , data_rate=sample_rate_input, address=0x48)
             chan1sum = 0
             chan2sum = 0
             chan3sum = 0
-            chan1 = AnalogIn(self.ads, ADS.P1)
-            chan2 = AnalogIn(self.ads, ADS.P2)
-            chan3 = AnalogIn(self.ads, ADS.P3)
+            chan1 = AnalogIn(ads, ADS.P1)
+            chan2 = AnalogIn(ads, ADS.P2)
+            chan3 = AnalogIn(ads, ADS.P3)
            
             for i in range(10):
                 self.leds[0] = (32767, 32767, 32767)
