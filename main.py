@@ -1,7 +1,7 @@
 import board
 import busio
 
-import time
+import time,threading
 import configparser
 
 
@@ -9,17 +9,27 @@ from kivy.app import App
 
 from kivy.lang import Builder
 from kivy.properties import NumericProperty, StringProperty, BooleanProperty,\
-    ListProperty
+    ListProperty, ObjectProperty
 from kivy.clock import Clock
 
 from kivy.uix.screenmanager import Screen
 from kivy.core.window import Window
 
-#hardware
+#for popup
+from kivy.factory import Factory
+from kivy.uix.popup import Popup
 
+#hardware
 import adafruit_tlc59711
 import adafruit_ads1x15.ads1115 as ADS
 from adafruit_ads1x15.analog_in import AnalogIn
+
+class PopupBox(Popup):
+    pop_up_text = ObjectProperty()
+    def update_pop_up_text(self, p_message):
+        self.pop_up_text.text = p_message
+    def set_bar(self, value):
+        self.reading_progress_bar.value = value
 
 class ShowcaseScreen(Screen):
     #fullscreen = BooleanProperty(False)
@@ -116,7 +126,8 @@ class ShowcaseApp(App):
 
         
     def go_screen(self, screen_name):
-        self.hierarchy_index.append('{0}'.format(screen_name))
+        if (self.hierarchy_index[-1] != screen_name):
+            self.hierarchy_index.append('{0}'.format(screen_name))
         print(self.hierarchy_index)
         #self.previous_screen = self.current_screen
         #self.current_screen = screen_name
@@ -175,8 +186,6 @@ class ShowcaseApp(App):
             print("SCK, MOSI:")
             print(board.SCK)
             print(board.MOSI)
-            #spi = busio.SPI(board.SCK, MOSI=board.MOSI)
-            #leds = adafruit_tlc59711.TLC59711(self.spi, auto_show=False)
             if self.led_blue_on:
                 self.leds[0] = (0, 0, 0)
                 self.led_blue_on = False
@@ -196,7 +205,6 @@ class ShowcaseApp(App):
         print("SCK, MOSI:")
         print(board.SCK)
         print(board.MOSI)
-        #leds = adafruit_tlc59711.TLC59711(self.spi, auto_show=False)
         if self.led_red_on:
             self.leds[1] = (0, 0, 0)
             self.led_red_on = False
@@ -268,8 +276,9 @@ class ShowcaseApp(App):
             print('ADC diff test failed')
             
 #-----------------------------Fluorometer---------------------------------            
-    def adc_aver(self):
+    def adc_aver_thread(self):
         try:
+            pro_bar = 0
             gain_input = float(self.adc_gain)
             sample_rate_input = float(self.sample_rate)
             ads = ADS.ADS1115(self.i2c,gain=gain_input , data_rate=sample_rate_input, address=0x48)
@@ -287,6 +296,8 @@ class ShowcaseApp(App):
                 chan2sum = chan2sum + chan2read
                 chan3sum = chan3sum + chan3read
                 print(str(chan3read) +" "+str(chan2read) +" "+ str(chan1read))
+                pro_bar += 10
+                self.pop_up.set_bar(pro_bar)
             print('ADC average: ')
             print(chan3sum/10)   
             print(chan2sum/10)
@@ -294,16 +305,18 @@ class ShowcaseApp(App):
             self.flo_read[0] = str(chan3sum/10)
             self.flo_read[1] = str(chan2sum/10)
             self.flo_read[2] = str(chan1sum/10)
-           
+            self.pop_up.dismiss()
         except:
+            self.pop_up.dismiss()
             print('ADC average test failed')
             
-    def adc_aver_with_led(self):
+    def adc_aver_with_led_thread(self):
         try:
+            pro_bar = 0
             gain_input = float(self.adc_gain)
             sample_rate_input = float(self.sample_rate)
             ads = ADS.ADS1115(self.i2c,gain=gain_input , data_rate=sample_rate_input, address=0x48)
-            self.leds[0] = (32767, 32767, 32767)
+            self.leds[1] = (32767, 32767, 32767)
             self.leds.show()
             time.sleep(0.3)
             chan1sum = 0
@@ -321,20 +334,24 @@ class ShowcaseApp(App):
                 chan3sum = chan3sum + chan3read
                 print(str(chan3read) +" "+str(chan2read) +" "+ str(chan1read))
                 time.sleep(0.3)
+                pro_bar += 10
+                self.pop_up.set_bar(pro_bar)
             print("result led always on: ")
             print(str(chan3sum/10)+" "+str(chan2sum/10)+" "+str(chan1sum/10))
-            self.leds[0] = (0, 0, 0)
+            self.leds[1] = (0, 0, 0)
             self.leds.show()
             self.flo_read[0] = str(chan3sum/10)
             self.flo_read[1] = str(chan2sum/10)
             self.flo_read[2] = str(chan1sum/10)
-        
+            self.pop_up.dismiss()
         except:
+            self.pop_up.dismiss()
             print('ADC average led always on failed')
-            
-    def adc_aver_with_blink(self):
-        
+    
+   
+    def adc_aver_with_blink_thread(self):
         try:
+            pro_bar = 0
             gain_input = float(self.adc_gain)
             sample_rate_input = float(self.sample_rate)
             ads = ADS.ADS1115(self.i2c,gain=gain_input , data_rate=sample_rate_input, address=0x48)
@@ -346,7 +363,7 @@ class ShowcaseApp(App):
             chan3 = AnalogIn(ads, ADS.P3)
            
             for i in range(10):
-                self.leds[0] = (32767, 32767, 32767)
+                self.leds[1] = (32767, 32767, 32767)
                 self.leds.show()
                 time.sleep(0.3)
                 chan1read = chan1.value
@@ -356,27 +373,55 @@ class ShowcaseApp(App):
                 chan2sum = chan2sum + chan2read
                 chan3sum = chan3sum + chan3read
                 print(str(chan3read) +" "+str(chan2read) +" "+ str(chan1read))
-                self.leds[0] = (0, 0, 0)
+                self.leds[1] = (0, 0, 0)
                 self.leds.show()
                 time.sleep(0.3)
+                pro_bar += 10
+                self.pop_up.set_bar(pro_bar)
             print("result blink: ")
             print(str(chan3sum/10)+" "+str(chan2sum/10)+" "+str(chan1sum/10))
             self.flo_read[0] = str(chan3sum/10)
             self.flo_read[1] = str(chan2sum/10)
             self.flo_read[2] = str(chan1sum/10)
-            #self.root.ids.flo_read1.text = '{0}'.format(str(chan3sum/10))
-            #self.root.ids.flo_read2.text = '{0}'.format(str(chan2sum/10))
-            #self.root.ids.flo_read3.text = '{0}'.format(str(chan1sum/10))
+            self.pop_up.dismiss()
         except:
+            self.pop_up.dismiss()
             print('ADC average blink failed')
             
+    def adc_aver(self):
+        self.show_popup()
+        mythread = threading.Thread(target=self.adc_aver_thread)
+        mythread.start()
+        
+    def adc_aver_with_led(self):
+        self.show_popup()
+        mythread = threading.Thread(target=self.adc_aver_with_led_thread)
+        mythread.start()
+        
+    def adc_aver_with_blink(self):
+        self.show_popup()
+        mythread = threading.Thread(target=self.adc_aver_with_blink_thread)
+        mythread.start()
+        
     def read_standard(self):
         print('read stadndard')
         fake_read = 400
         ShowcaseApp.config['DNA']['v'] = str(fake_read)
         with open('config.ini', 'w') as configfile:
             ShowcaseApp.config.write(configfile)
-    def read_tube(self):
+
+    def show_popup(self):
+        self.pop_up = Factory.PopupBox()
+        self.pop_up.update_pop_up_text('Reading...')
+        self.pop_up.open()
+
+    def calculate_thread(self):
+        bar = 0
+        for i in range(10):
+            bar = bar + 10
+            self.pop_up.set_bar(bar)
+            time.sleep(0.2)
+            
         fake_read = 459.40
         k = float(ShowcaseApp.config['DNA']['k'])
         g = float(ShowcaseApp.config['DNA']['g'])
@@ -387,10 +432,17 @@ class ShowcaseApp(App):
         print(v)
         r = (v-g)*((pow(s,n)+k)/pow(s,n))
         ShowcaseApp.DNA_result = str(pow(k*(fake_read - g)/(r-(fake_read-g)), 1/n))
+        self.pop_up.dismiss()
+        
+    def read_tube(self):
+        
+        self.show_popup()
+        mythread = threading.Thread(target=self.calculate_thread)
+        mythread.start()
         #print(ShowcaseApp.DNA_result)
         self.go_screen('DNA Result')
         
-        
+      
         
 if __name__ == '__main__':
     ShowcaseApp().run()

@@ -80,3 +80,26 @@ BoxLayout:
 			text:"Settings"
 			font_size:36
 			on_release:app.go_settings()
+			
+<PopupBox>:
+    pop_up_text: _pop_up_text
+	reading_progress_bar: _reading_progress_bar
+    size_hint: 1, 1
+    auto_dismiss: True
+    title: 'Reading'   
+
+    BoxLayout:
+        orientation: "vertical"
+        Label:
+			size_hint_y:.5
+            id: _pop_up_text
+			font_size:36
+            text: ''	
+		ProgressBar:
+			pos_hint:{'x':.1}
+			size_hint_y:.5
+			size_hint_x:.8
+			id:_reading_progress_bar
+			value:0
+			min:0
+			max:100
