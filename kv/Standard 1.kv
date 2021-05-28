@@ -1,0 +1,47 @@
+ShowcaseScreen:
+    name: 'Standard 1'
+    fullscreen: True
+	BoxLayout:
+		orientation: "vertical"
+		padding:10
+		spacing:20
+		BoxLayout:	
+			size_hint:1,0.8
+			Label:
+				text:"Please insert standard 2"
+				font_size:36	
+		Graph:
+			id: plot_dna
+			size_hint_x:.6
+			pos_hint:{"x":.2}
+            xlabel: "Omec tube concentration(μg/mL)"
+            ylabel: "RFUs"
+			x_ticks_minor:5
+			x_ticks_major:100
+			y_ticks_major:50
+			y_grid_label:False
+			x_grid_label:True
+			padding:5
+			x_grid:True
+			y_grid:False
+			xmin:0
+			xmax:600
+			ymin:0 
+			ymax:200	
+			
+		BoxLayout:	
+			size_hint:1,0.2
+			spacing:40
+			orientation: "horizontal"
+			Button:
+				text:"Cancel"
+				font_size:30
+				on_release:app.go_previous()
+				
+			Button:
+				text:"Read Standard 2"
+				font_size:30
+				on_release:app.read_standard_2()
+			
+		
+		

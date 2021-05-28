@@ -1,5 +1,5 @@
 ShowcaseScreen:
-    name: 'DNA'
+    name: 'DNA Result'
     fullscreen: True
 	BoxLayout:
 		orientation: "vertical"
@@ -13,7 +13,9 @@ ShowcaseScreen:
 				font_size:36
 				
 			Label:
-				text:'{}'.format(app.DNA_result)
+				id:DNA_result
+				#text:'{}'.format(app.DNA_result)
+				text:""
 				font_size:36
 				
 		BoxLayout:	

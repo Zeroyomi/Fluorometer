@@ -19,6 +19,9 @@ from kivy.core.window import Window
 from kivy.factory import Factory
 from kivy.uix.popup import Popup
 
+#for table
+from kivy_garden.graph import Graph, MeshLinePlot, SmoothLinePlot, MeshStemPlot, PointPlot, ScatterPlot
+
 #hardware
 import adafruit_tlc59711
 import adafruit_ads1x15.ads1115 as ADS
@@ -275,7 +278,12 @@ class ShowcaseApp(App):
         except:
             print('ADC diff test failed')
             
-#-----------------------------Fluorometer---------------------------------            
+#-----------------------------Fluorometer---------------------------------
+    def show_popup(self):
+        self.pop_up = Factory.PopupBox()
+        self.pop_up.update_pop_up_text('Reading...')
+        self.pop_up.open()        
+
     def adc_aver_thread(self):
         try:
             pro_bar = 0
@@ -402,45 +410,215 @@ class ShowcaseApp(App):
         self.show_popup()
         mythread = threading.Thread(target=self.adc_aver_with_blink_thread)
         mythread.start()
+#-----------------------------DNA---------------------------------        
+    def read_standard_1_thread(self):
+        print('read stadndard 1')
+        fake_read = 0
+        '''
+        bar = 0
+        for i in range(5):
+            bar = bar + 20
+            self.pop_up.set_bar(bar)
+            time.sleep(0.2)
+        fake_read = 22
+        '''
+        try:
+            pro_bar = 0
+            gain_input = float(self.adc_gain)
+            sample_rate_input = float(self.sample_rate)
+            ads = ADS.ADS1115(self.i2c,gain=gain_input , data_rate=sample_rate_input, address=0x48)
+            chan1sum = 0
+            chan2sum = 0
+            chan3sum = 0
+            chan1 = AnalogIn(ads, ADS.P1)
+            chan2 = AnalogIn(ads, ADS.P2)
+            chan3 = AnalogIn(ads, ADS.P3)
+           
+            for i in range(10):
+                self.leds[1] = (32767, 32767, 32767)
+                self.leds.show()
+                time.sleep(0.3)
+                chan1read = chan1.value
+                chan2read = chan2.value
+                chan3read = chan3.value
+                chan1sum = chan1sum + chan1read
+                chan2sum = chan2sum + chan2read
+                chan3sum = chan3sum + chan3read
+                #print(str(chan3read) +" "+str(chan2read) +" "+ str(chan1read))
+                self.leds[1] = (0, 0, 0)
+                self.leds.show()
+                time.sleep(0.3)
+                pro_bar += 10
+                self.pop_up.set_bar(pro_bar)
+            #print("result blink: ")
+            #print(str(chan3sum/10)+" "+str(chan2sum/10)+" "+str(chan1sum/10))
+            self.flo_read[0] = str(chan3sum/10)
+            self.flo_read[1] = str(chan2sum/10)
+            self.flo_read[2] = str(chan1sum/10)
+            fake_read = chan1sum/10
+           
+        except:
+            self.pop_up.dismiss()
+            print('standard 1 read failed')
+        print(fake_read)
+        ShowcaseApp.config['DNA']['g'] = str(fake_read)
+        with open('config.ini', 'w') as configfile:
+            ShowcaseApp.config.write(configfile)
+
+            
+        #self.root.ids.sm.get_screen('Standard Table').ids.plot_dna.add_plot(self.plot)    
+        self.pop_up.dismiss()
         
-    def read_standard(self):
-        print('read stadndard')
-        fake_read = 400
+    def read_standard_2_thread(self):
+        fake_read = 0
+        print('read stadndard 2')
+        '''
+        bar = 0
+        for i in range(5):
+            bar = bar + 20
+            self.pop_up.set_bar(bar)
+            time.sleep(0.2)
+        fake_read = 60
+        '''
+        try:
+            pro_bar = 0
+            gain_input = float(self.adc_gain)
+            sample_rate_input = float(self.sample_rate)
+            ads = ADS.ADS1115(self.i2c,gain=gain_input , data_rate=sample_rate_input, address=0x48)
+            chan1sum = 0
+            chan2sum = 0
+            chan3sum = 0
+            chan1 = AnalogIn(ads, ADS.P1)
+            chan2 = AnalogIn(ads, ADS.P2)
+            chan3 = AnalogIn(ads, ADS.P3)
+           
+            for i in range(10):
+                self.leds[1] = (32767, 32767, 32767)
+                self.leds.show()
+                time.sleep(0.3)
+                chan1read = chan1.value
+                chan2read = chan2.value
+                chan3read = chan3.value
+                chan1sum = chan1sum + chan1read
+                chan2sum = chan2sum + chan2read
+                chan3sum = chan3sum + chan3read
+                #print(str(chan3read) +" "+str(chan2read) +" "+ str(chan1read))
+                self.leds[1] = (0, 0, 0)
+                self.leds.show()
+                time.sleep(0.3)
+                pro_bar += 10
+                self.pop_up.set_bar(pro_bar)
+            #print("result blink: ")
+            #print(str(chan3sum/10)+" "+str(chan2sum/10)+" "+str(chan1sum/10))
+            self.flo_read[0] = str(chan3sum/10)
+            self.flo_read[1] = str(chan2sum/10)
+            self.flo_read[2] = str(chan1sum/10)
+            fake_read = chan1sum/10
+            
+        except:
+            self.pop_up.dismiss()
+            print('standard 2 read failed')
+        print(fake_read)   
         ShowcaseApp.config['DNA']['v'] = str(fake_read)
         with open('config.ini', 'w') as configfile:
             ShowcaseApp.config.write(configfile)
 
-    def show_popup(self):
-        self.pop_up = Factory.PopupBox()
-        self.pop_up.update_pop_up_text('Reading...')
-        self.pop_up.open()
-
-    def calculate_thread(self):
+        blank_read = float(ShowcaseApp.config['DNA']['g'])
+        self.plot = PointPlot(color=[1, 1, 1, 1])
+        self.root.ids.sm.get_screen('Standard Table').ids.plot_dna.remove_plot(self.plot)
+        self.plot.points = [(x, ((fake_read - blank_read)/500*x+blank_read)) for x in range(0,500)]
+        self.root.ids.sm.get_screen('Standard Table').ids.plot_dna.add_plot(self.plot)
+        #self.root.ids['plot_dna'].add_plot(self.plot)
+        self.pop_up.dismiss()
+        
+    def DNA_calculate_thread(self):
+        fake_read = 0
+        '''
         bar = 0
         for i in range(10):
             bar = bar + 10
             self.pop_up.set_bar(bar)
             time.sleep(0.2)
             
-        fake_read = 459.40
+        fake_read = 459.40                          #reading RFU
+        '''
+        try:
+            pro_bar = 0
+            gain_input = float(self.adc_gain)
+            sample_rate_input = float(self.sample_rate)
+            ads = ADS.ADS1115(self.i2c,gain=gain_input , data_rate=sample_rate_input, address=0x48)
+            chan1sum = 0
+            chan2sum = 0
+            chan3sum = 0
+            chan1 = AnalogIn(ads, ADS.P1)
+            chan2 = AnalogIn(ads, ADS.P2)
+            chan3 = AnalogIn(ads, ADS.P3)
+           
+            for i in range(10):
+                self.leds[1] = (32767, 32767, 32767)
+                self.leds.show()
+                time.sleep(0.3)
+                chan1read = chan1.value
+                chan2read = chan2.value
+                chan3read = chan3.value
+                chan1sum = chan1sum + chan1read
+                chan2sum = chan2sum + chan2read
+                chan3sum = chan3sum + chan3read
+                #print(str(chan3read) +" "+str(chan2read) +" "+ str(chan1read))
+                self.leds[1] = (0, 0, 0)
+                self.leds.show()
+                time.sleep(0.3)
+                pro_bar += 10
+                self.pop_up.set_bar(pro_bar)
+            #print("result blink: ")
+            #print(str(chan3sum/10)+" "+str(chan2sum/10)+" "+str(chan1sum/10))
+            self.flo_read[0] = str(chan3sum/10)
+            self.flo_read[1] = str(chan2sum/10)
+            self.flo_read[2] = str(chan1sum/10)
+            fake_read = chan1sum/10
+            
+        except:
+            self.pop_up.dismiss()
+            print('read tube failed')
+        print(fake_read)
+            
         k = float(ShowcaseApp.config['DNA']['k'])
-        g = float(ShowcaseApp.config['DNA']['g'])
-        #r = float(ShowcaseApp.config['DNA']['r'])
-        n = float(ShowcaseApp.config['DNA']['n'])
-        v = float(ShowcaseApp.config['DNA']['v'])
-        s = float(ShowcaseApp.config['DNA']['s'])
-        print(v)
+        g = float(ShowcaseApp.config['DNA']['g'])   #blank RFU
+        #r = float(ShowcaseApp.config['DNA']['r'])  
+        n = float(ShowcaseApp.config['DNA']['n'])   
+        v = float(ShowcaseApp.config['DNA']['v'])   #high_end RFU
+        s = float(ShowcaseApp.config['DNA']['s'])   #high_standard_con
+        
+        
         r = (v-g)*((pow(s,n)+k)/pow(s,n))
-        ShowcaseApp.DNA_result = str(pow(k*(fake_read - g)/(r-(fake_read-g)), 1/n))
+        result = pow(k*(fake_read - g)/(r-(fake_read-g)), 1/n)
+        print(result)
+        #self.DNA_result = str(result)
+        self.root.ids.sm.get_screen('DNA Result').ids.DNA_result.text = str(result)
+            
         self.pop_up.dismiss()
         
-    def read_tube(self):
-        
+    def read_standard_1(self):
         self.show_popup()
-        mythread = threading.Thread(target=self.calculate_thread)
+        self.go_screen('Standard 1')
+        mythread = threading.Thread(target=self.read_standard_1_thread)
         mythread.start()
-        #print(ShowcaseApp.DNA_result)
+        
+        
+    def read_standard_2(self):
+        self.show_popup()
+        self.go_screen('Standard Table')
+        mythread = threading.Thread(target=self.read_standard_2_thread)
+        mythread.start()
+        
+        
+    def read_tube(self):
+        self.show_popup()
         self.go_screen('DNA Result')
+        mythread = threading.Thread(target=self.DNA_calculate_thread)
+        mythread.start()
+        
+        
         
       
         
