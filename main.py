@@ -62,6 +62,7 @@ class ShowcaseApp(App):
     sample_rate = '8'
     unit = NumericProperty(1)
     home_screen = Builder.load_file("./kv/home.kv")
+    setting_screen = Builder.load_file("./kv/settings.kv")
     #adc_loop = False
     try:
         spi = busio.SPI(board.SCK, MOSI=board.MOSI)
@@ -122,8 +123,8 @@ class ShowcaseApp(App):
         del self.hierarchy_index[:]
         self.hierarchy_index.append('settings')
         print(self.hierarchy_index)
-        screen = Builder.load_file("./kv/settings.kv")
-        self.root.ids.sm.switch_to(screen, direction='right')
+        #screen = Builder.load_file("./kv/settings.kv")
+        self.root.ids.sm.switch_to(self.setting_screen, direction='right')
         self.root.ids.main_label.text = 'Settings'
         self.root.ids.back_btn.disabled=True
 
@@ -190,13 +191,13 @@ class ShowcaseApp(App):
             print(board.SCK)
             print(board.MOSI)
             if self.led_blue_on:
-                self.leds[0] = (0, 0, 0)
+                self.leds[1] = (0, 0, 0)
                 self.led_blue_on = False
                 self.leds.show()
                 print('Blue Led off')
                 return
             else:
-                self.leds[0] = (65535, 65535, 65535)
+                self.leds[1] = (65535, 65535, 65535)
                 self.led_blue_on = True
                 self.leds.show()
                 print('Blue Led on')
@@ -209,18 +210,17 @@ class ShowcaseApp(App):
         print(board.SCK)
         print(board.MOSI)
         if self.led_red_on:
-            self.leds[1] = (0, 0, 0)
+            self.leds[0] = (0, 0, 0)
             self.led_red_on = False
             self.leds.show()
             print('Red Led off')
             return
         else:
-            self.leds[1] = (65535, 65535, 65535)
+            self.leds[0] = (65535, 65535, 65535)
             self.led_red_on = True
             self.leds.show()
             print('Red Led on')
             return                           
-        
 
     def adc_test(self):
         try: 
@@ -245,7 +245,7 @@ class ShowcaseApp(App):
             
         except:
             print('ADC test begin false')
-            
+         
     def adc_diff(self):
         try:
             gain_input = float(self.adc_gain)
@@ -259,7 +259,7 @@ class ShowcaseApp(App):
             adc03 = chan1.value
             print("befor led {:>5}\t{:>5}\t{:>5}".format(adc01, adc02, adc03))
             
-            self.leds[0] = (32767, 32767, 32767)
+            self.leds[0] = (65535, 65535, 65535)
             self.leds.show()
             time.sleep(0.5)
             adc01_af = chan3.value
@@ -277,13 +277,30 @@ class ShowcaseApp(App):
         
         except:
             print('ADC diff test failed')
-            
+
+    def time_test(self):
+        ads = ADS.ADS1115(self.i2c,gain=1 , data_rate=8, address=0x48)
+        chan2 = AnalogIn(ads, ADS.P2)
+        self.leds[1] = (65535, 65535, 65535)
+        self.leds.show()
+        for i in range(20):
+            print(time.ctime())
+            print(chan2.value)
+            print(chan2.value)
+            print(chan2.value)
+            print(chan2.value)
+            print(chan2.value)
+            time.sleep(30)
+        self.leds[1] = (0,0,0)
+        self.leds.show()
+
 #-----------------------------Fluorometer---------------------------------
     def show_popup(self):
         self.pop_up = Factory.PopupBox()
         self.pop_up.update_pop_up_text('Reading...')
         self.pop_up.open()        
-
+       
+            
     def adc_aver_thread(self):
         try:
             pro_bar = 0
@@ -324,7 +341,7 @@ class ShowcaseApp(App):
             gain_input = float(self.adc_gain)
             sample_rate_input = float(self.sample_rate)
             ads = ADS.ADS1115(self.i2c,gain=gain_input , data_rate=sample_rate_input, address=0x48)
-            self.leds[1] = (32767, 32767, 32767)
+            self.leds[1] = (65535, 65535, 65535)
             self.leds.show()
             time.sleep(0.3)
             chan1sum = 0
@@ -371,7 +388,7 @@ class ShowcaseApp(App):
             chan3 = AnalogIn(ads, ADS.P3)
            
             for i in range(10):
-                self.leds[1] = (32767, 32767, 32767)
+                self.leds[1] = (65535, 65535, 65535)
                 self.leds.show()
                 time.sleep(0.3)
                 chan1read = chan1.value
@@ -395,7 +412,7 @@ class ShowcaseApp(App):
         except:
             self.pop_up.dismiss()
             print('ADC average blink failed')
-            
+           
     def adc_aver(self):
         self.show_popup()
         mythread = threading.Thread(target=self.adc_aver_thread)
@@ -435,7 +452,7 @@ class ShowcaseApp(App):
             chan3 = AnalogIn(ads, ADS.P3)
            
             for i in range(10):
-                self.leds[1] = (32767, 32767, 32767)
+                self.leds[1] = (65535, 65535, 65535)
                 self.leds.show()
                 time.sleep(0.3)
                 chan1read = chan1.value
@@ -493,7 +510,7 @@ class ShowcaseApp(App):
             chan3 = AnalogIn(ads, ADS.P3)
            
             for i in range(10):
-                self.leds[1] = (32767, 32767, 32767)
+                self.leds[1] = (65535, 65535, 65535)
                 self.leds.show()
                 time.sleep(0.3)
                 chan1read = chan1.value
@@ -555,7 +572,7 @@ class ShowcaseApp(App):
             chan3 = AnalogIn(ads, ADS.P3)
            
             for i in range(10):
-                self.leds[1] = (32767, 32767, 32767)
+                self.leds[1] = (65535, 65535, 65535)
                 self.leds.show()
                 time.sleep(0.3)
                 chan1read = chan1.value
@@ -593,8 +610,8 @@ class ShowcaseApp(App):
         r = (v-g)*((pow(s,n)+k)/pow(s,n))
         result = pow(k*(fake_read - g)/(r-(fake_read-g)), 1/n)
         print(result)
-        #self.DNA_result = str(result)
-        self.root.ids.sm.get_screen('DNA Result').ids.DNA_result.text = str(result)
+        self.DNA_result = '{:.2f}'.format(result)
+        #self.root.ids.sm.get_screen('DNA Result').ids.DNA_result.text = str(result)
             
         self.pop_up.dismiss()
         
@@ -614,10 +631,10 @@ class ShowcaseApp(App):
         
     def read_tube(self):
         self.show_popup()
-        self.go_screen('DNA Result')
+        
         mythread = threading.Thread(target=self.DNA_calculate_thread)
         mythread.start()
-        
+        self.go_screen('DNA Result')
         
         
       
