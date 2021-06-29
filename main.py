@@ -283,7 +283,7 @@ class ShowcaseApp(App):
         chan2 = AnalogIn(ads, ADS.P2)
         self.leds[1] = (65535, 65535, 65535)
         self.leds.show()
-        for i in range(20):
+        for i in range(60):
             print(time.ctime())
             print(chan2.value)
             print(chan2.value)
@@ -390,7 +390,7 @@ class ShowcaseApp(App):
             for i in range(10):
                 self.leds[1] = (65535, 65535, 65535)
                 self.leds.show()
-                time.sleep(0.3)
+                time.sleep(0.1)
                 chan1read = chan1.value
                 chan2read = chan2.value
                 chan3read = chan3.value
@@ -400,7 +400,7 @@ class ShowcaseApp(App):
                 print(str(chan3read) +" "+str(chan2read) +" "+ str(chan1read))
                 self.leds[1] = (0, 0, 0)
                 self.leds.show()
-                time.sleep(0.3)
+                time.sleep(0.1)
                 pro_bar += 10
                 self.pop_up.set_bar(pro_bar)
             print("result blink: ")
@@ -412,7 +412,62 @@ class ShowcaseApp(App):
         except:
             self.pop_up.dismiss()
             print('ADC average blink failed')
-           
+            
+    def adc_aver_with_blink_sub_thread(self):
+        try:
+            pro_bar = 0
+            gain_input = float(self.adc_gain)
+            sample_rate_input = float(self.sample_rate)
+            ads = ADS.ADS1115(self.i2c,gain=gain_input , data_rate=sample_rate_input, address=0x48)
+            chan1sum = 0
+            chan2sum = 0
+            chan3sum = 0
+            chan1 = AnalogIn(ads, ADS.P1)
+            chan2 = AnalogIn(ads, ADS.P2)
+            chan3 = AnalogIn(ads, ADS.P3)
+            print('')
+            for i in range(10):
+                chan1read = chan1.value
+                chan2read = chan2.value
+                chan3read = chan3.value
+                print(str(chan3read) +" "+str(chan2read) +" "+ str(chan1read))
+                self.leds[1] = (65535, 65535, 65535)
+                self.leds.show()
+                time.sleep(0.1)
+
+                #chan1read = chan1.value - chan1read
+                #chan2read = chan2.value - chan2read
+                #chan3read = chan3.value - chan3read
+                chan1read2 = chan1.value
+                chan2read2 = chan2.value
+                chan3read2 = chan3.value
+                print(str(chan3read2) +" "+str(chan2read2) +" "+ str(chan1read2))
+
+                chan1read = chan1read2 - chan1read
+                chan2read = chan2read2 - chan2read
+                chan3read = chan3read2 - chan3read
+                
+                chan1sum = chan1sum + chan1read
+                chan2sum = chan2sum + chan2read
+                chan3sum = chan3sum + chan3read
+
+                print(str(chan3read) +" "+str(chan2read) +" "+ str(chan1read))
+                print('------------------------')
+                self.leds[1] = (0, 0, 0)
+                self.leds.show()
+                time.sleep(0.1)
+                pro_bar += 10
+                self.pop_up.set_bar(pro_bar)
+            print("result blink: ")
+            print(str(chan3sum/10)+" "+str(chan2sum/10)+" "+str(chan1sum/10))
+            self.flo_read[0] = str(chan3sum/10)
+            self.flo_read[1] = str(chan2sum/10)
+            self.flo_read[2] = str(chan1sum/10)
+            self.pop_up.dismiss()
+        except:
+            self.pop_up.dismiss()
+            print('ADC average blink failed')
+            
     def adc_aver(self):
         self.show_popup()
         mythread = threading.Thread(target=self.adc_aver_thread)
@@ -427,6 +482,11 @@ class ShowcaseApp(App):
         self.show_popup()
         mythread = threading.Thread(target=self.adc_aver_with_blink_thread)
         mythread.start()
+
+    def adc_aver_with_blink_sub(self):
+        self.show_popup()
+        mythread = threading.Thread(target=self.adc_aver_with_blink_sub_thread)
+        mythread.start()    
 #-----------------------------DNA---------------------------------        
     def read_standard_1_thread(self):
         print('read stadndard 1')

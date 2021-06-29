@@ -40,9 +40,14 @@ ShowcaseScreen:
 				font_size:30
 				on_release: app.adc_aver_with_led()
 			Button:
-				text:"LED Blink"
+				text:"Blink"
 				font_size:30
 				on_release: app.adc_aver_with_blink()
+				
+			Button:
+				text:"Blink Sub"
+				font_size:30
+				on_release: app.adc_aver_with_blink_sub()	
 				
 		GridLayout:		
 			spacing:30
