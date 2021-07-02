@@ -35,10 +35,14 @@ ShowcaseScreen:
 				text:"No LED"
 				font_size:30
 				on_release: app.adc_aver()
+			#Button:
+				#text:"Always On"
+				#font_size:30
+				#on_release: app.adc_aver_with_led()
 			Button:
-				text:"Always On"
+				text:"LED Current"
 				font_size:30
-				on_release: app.adc_aver_with_led()
+				on_release: app.read_led_current()	
 			Button:
 				text:"Blink"
 				font_size:30

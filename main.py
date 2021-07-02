@@ -74,8 +74,13 @@ class ShowcaseApp(App):
         leds[0] = (0, 0, 0)
         leds[1] = (0, 0, 0)
         leds.show()
+        print('blue bc:')
+        print(leds._bcb)
+        print('red bc')
+        print(leds._bcr)
     except:
         print('>>>>>>>>>>>>>>>led init failed<<<<<<<<<<<<<<<<<<<')
+
     try:
         i2c = busio.I2C(board.SCL, board.SDA)
     except:
@@ -468,6 +473,52 @@ class ShowcaseApp(App):
             self.pop_up.dismiss()
             print('ADC average blink failed')
             
+    def read_led_current_thread(self):
+        try:
+            pro_bar = 0
+            gain_input = float(self.adc_gain)
+            sample_rate_input = float(self.sample_rate)
+            ads = ADS.ADS1115(self.i2c,gain=gain_input , data_rate=sample_rate_input, address=0x48)
+            #chan1sum = 0
+            #chan2sum = 0
+            #chan3sum = 0
+            chan1 = AnalogIn(ads, ADS.P1)
+            chan2 = AnalogIn(ads, ADS.P2)
+            chan3 = AnalogIn(ads, ADS.P3)
+            print('')
+            
+            self.leds[1] = (65535, 65535, 65535)
+            
+            for i in range(128):                
+                
+                
+                #time.sleep(0.1)
+
+         
+                self.leds._bcr = i
+                self.leds.show()
+                #print("bc value " + str(self.leds._bcr))
+                chan1read2 = chan1.value
+                chan2read2 = chan2.value
+                chan3read2 = chan3.value
+                print(str(chan3read2) +" "+str(chan2read2) +" "+ str(chan1read2))
+
+             
+                #self.leds[1] = (0, 0, 0)
+                #self.leds.show()
+                #time.sleep(0.1)
+                pro_bar += 100/128
+                self.pop_up.set_bar(pro_bar)
+                
+            print('------------------------')
+            self.leds._bcr = 127
+            self.leds[1] = (0, 0, 0)
+            self.leds.show()
+            self.pop_up.dismiss()
+        except:
+            self.pop_up.dismiss()
+            print('LED Current test failed')
+            
     def adc_aver(self):
         self.show_popup()
         mythread = threading.Thread(target=self.adc_aver_thread)
@@ -486,7 +537,12 @@ class ShowcaseApp(App):
     def adc_aver_with_blink_sub(self):
         self.show_popup()
         mythread = threading.Thread(target=self.adc_aver_with_blink_sub_thread)
-        mythread.start()    
+        mythread.start()
+        
+    def read_led_current(self):
+        self.show_popup()
+        mythread = threading.Thread(target=self.read_led_current_thread)
+        mythread.start()
 #-----------------------------DNA---------------------------------        
     def read_standard_1_thread(self):
         print('read stadndard 1')
@@ -695,6 +751,8 @@ class ShowcaseApp(App):
         mythread = threading.Thread(target=self.DNA_calculate_thread)
         mythread.start()
         self.go_screen('DNA Result')
+
+    
         
         
       
