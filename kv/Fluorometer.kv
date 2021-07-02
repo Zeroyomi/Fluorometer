@@ -40,13 +40,17 @@ ShowcaseScreen:
 				#font_size:30
 				#on_release: app.adc_aver_with_led()
 			Button:
-				text:"LED Current"
+				text:"Gain control"
 				font_size:30
-				on_release: app.read_led_current()	
-			Button:
-				text:"Blink"
-				font_size:30
-				on_release: app.adc_aver_with_blink()
+				on_release: app.adc_aver_with_blink_sub_gaincontrol()
+			#Button:
+				#text:"LED Current"
+				#font_size:30
+				#on_release: app.read_led_current()	
+			#Button:
+				#text:"Blink"
+				#font_size:30
+				#on_release: app.adc_aver_with_blink()
 				
 			Button:
 				text:"Blink Sub"
