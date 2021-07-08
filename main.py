@@ -1,5 +1,6 @@
 import board
 import busio
+import os
 
 import time,threading
 import configparser
@@ -51,6 +52,7 @@ class ShowcaseApp(App):
     DNA_result = StringProperty()
     adc_gain = StringProperty()
     sample_rate = StringProperty()
+    record_name = StringProperty('not record')
     #config
     config = configparser.ConfigParser()
     config.read('config.ini')
@@ -63,7 +65,9 @@ class ShowcaseApp(App):
     unit = NumericProperty(1)
     home_screen = Builder.load_file("./kv/home.kv")
     setting_screen = Builder.load_file("./kv/settings.kv")
-    #adc_loop = False
+    
+    f_record = False
+    name = ''
     try:
         spi = busio.SPI(board.SCK, MOSI=board.MOSI)
         
@@ -286,16 +290,22 @@ class ShowcaseApp(App):
     def time_test(self):
         ads = ADS.ADS1115(self.i2c,gain=1 , data_rate=8, address=0x48)
         chan2 = AnalogIn(ads, ADS.P2)
-        self.leds[1] = (65535, 65535, 65535)
-        self.leds.show()
-        for i in range(60):
+        
+        for i in range(30):
             print(time.ctime())
-            print(chan2.value)
-            print(chan2.value)
-            print(chan2.value)
-            print(chan2.value)
-            print(chan2.value)
+            for i in range(5):
+                refread_led_off = chan2.value
+                print(refread_led_off)
+                self.leds[1] = (65535, 65535, 65535)
+                self.leds.show()
+                refread_led_on = chan2.value
+                print(refread_led_on)
+                self.leds[1] = (0,0,0)
+                self.leds.show()
+                print(refread_led_on - refread_led_off)
+                print('------------------')
             time.sleep(30)
+            
         self.leds[1] = (0,0,0)
         self.leds.show()
 
@@ -395,7 +405,7 @@ class ShowcaseApp(App):
             for i in range(10):
                 self.leds[1] = (65535, 65535, 65535)
                 self.leds.show()
-                time.sleep(0.1)
+                #time.sleep(0.1)
                 chan1read = chan1.value
                 chan2read = chan2.value
                 chan3read = chan3.value
@@ -405,7 +415,7 @@ class ShowcaseApp(App):
                 print(str(chan3read) +" "+str(chan2read) +" "+ str(chan1read))
                 self.leds[1] = (0, 0, 0)
                 self.leds.show()
-                time.sleep(0.1)
+                #time.sleep(0.1)
                 pro_bar += 10
                 self.pop_up.set_bar(pro_bar)
             print("result blink: ")
@@ -438,7 +448,7 @@ class ShowcaseApp(App):
                 print(str(chan3read) +" "+str(chan2read) +" "+ str(chan1read))
                 self.leds[1] = (65535, 65535, 65535)
                 self.leds.show()
-                time.sleep(0.1)
+                #time.sleep(0.1)
 
                 #chan1read = chan1.value - chan1read
                 #chan2read = chan2.value - chan2read
@@ -460,7 +470,7 @@ class ShowcaseApp(App):
                 print('------------------------')
                 self.leds[1] = (0, 0, 0)
                 self.leds.show()
-                time.sleep(0.1)
+                #time.sleep(0.1)
                 pro_bar += 10
                 self.pop_up.set_bar(pro_bar)
             print("result blink: ")
@@ -521,6 +531,8 @@ class ShowcaseApp(App):
 
     def adc_aver_with_blink_sub_gaincontrol_thread(self):
         gainrange = [1, 2, 4, 8, 16]
+        if self.f_record:
+            flo_record = open(self.name, "a")
         try:
             pro_bar = 0
             gain_input = float(self.adc_gain)
@@ -538,10 +550,16 @@ class ShowcaseApp(App):
                 print('')
                 print('')
                 print("-----------start over with amplify [" + str(ap) + "] gain [" + str(gain_input) + "]--------------")
+                if self.f_record:
+                    flo_record.write('\n')
+                    flo_record.write('\n')
+                    flo_record.write("-----------start over with amplify [" + str(ap) + "] gain [" + str(gain_input) + "]--------------\n")
                 chanread[0] = chan1.value
                 refread = chan2.value
                 chanread[1] = chan3.value
                 print(str(chanread[1]) +" "+str(refread) +" "+ str(chanread[0]))
+                if self.f_record:
+                    flo_record.write(str(chanread[1]) +" "+str(refread) +" "+ str(chanread[0]) +"\n")
                 self.leds[1] = (65535, 65535, 65535)
                 self.leds.show()
                 #time.sleep(0.1)
@@ -553,11 +571,17 @@ class ShowcaseApp(App):
                 for read in chanread2:
                     if (read > 25000):
                         print("-------reach max, reducing gain-------")
+                        if self.f_record:
+                            flo_record.write("-------reach max, reducing gain-------\n")
                         gain_input = gain_input/2
 
                         
                         if (gain_input < 1):
                             print('reach minimal gain, abort')
+                            if self.f_record:
+                                flo_record.write('reach minimal gain, abort\n')
+                            if self.f_record:
+                                flo_record.write()
                             self.pop_up.dismiss()
                             return
                        
@@ -575,7 +599,8 @@ class ShowcaseApp(App):
 
             
             print(str(chanread2[1]) +" "+str(refread2) +" "+ str(chanread2[0]))
-
+            if self.f_record:
+                flo_record.write(str(chanread2[1]) +" "+str(refread2) +" "+ str(chanread2[0]) +"\n")
             chanread[0] = (chanread2[0] - chanread[0]) * ap
             refread = (refread2 - chanread[1]) * ap
             chanread[1] = (chanread2[1] - chanread[1]) * ap
@@ -586,6 +611,9 @@ class ShowcaseApp(App):
 
             print(str(chanread[1]) +" "+str(refread) +" "+ str(chanread[0]))
             print('------------------------')
+            if self.f_record:
+                flo_record.write(str(chanread[1]) +" "+str(refread) +" "+ str(chanread[0]) + "\n")
+                flo_record.write('------------------------\n')
             self.leds[1] = (0, 0, 0)
             self.leds.show()
             pro_bar += 10
@@ -596,6 +624,8 @@ class ShowcaseApp(App):
                 refread = chan2.value
                 chanread[1] = chan3.value
                 print(str(chanread[1]) +" "+str(refread) +" "+ str(chanread[0]))
+                if self.f_record:
+                    flo_record.write(str(chanread[1]) +" "+str(refread) +" "+ str(chanread[0]) + "\n")
                 self.leds[1] = (65535, 65535, 65535)
                 self.leds.show()
                 #time.sleep(0.1)
@@ -603,10 +633,7 @@ class ShowcaseApp(App):
                 chanread2[0] = chan1.value
                 refread2 = chan2.value
                 chanread2[1] = chan3.value
-
-                
-                        
-                
+        
                 print(str(chanread2[1]) +" "+str(refread2) +" "+ str(chanread2[0]))
 
                 chanread[0] = (chanread2[0] - chanread[0]) * ap
@@ -619,22 +646,33 @@ class ShowcaseApp(App):
 
                 print(str(chanread[1]) +" "+str(refread) +" "+ str(chanread[0]))
                 print('------------------------')
+                if self.f_record:
+                    flo_record.write(str(chanread2[1]) +" "+str(refread2) +" "+ str(chanread2[0]) + "\n")
+                    flo_record.write(str(chanread[1]) +" "+str(refread) +" "+ str(chanread[0]) + "\n")
+                    flo_record.write('------------------------\n')
                 self.leds[1] = (0, 0, 0)
                 self.leds.show()
-                time.sleep(0.1)
+                #time.sleep(0.1)
                 pro_bar += 10
                 self.pop_up.set_bar(pro_bar)
-            print("result blink sub: ")
+                
+            print("result blink sub with gain control: ")
             print(str(chansum[2]/10)+" "+str(chansum[1]/10)+" "+str(chansum[0]/10))
+            if self.f_record:
+                flo_record.write("result blink sub with gain control: \n")
+                flo_record.write(str(chansum[2]/10)+" "+str(chansum[1]/10)+" "+str(chansum[0]/10) + "\n")
+            
             self.flo_read[0] = str(chansum[2]/10)
             self.flo_read[1] = str(chansum[1]/10)
             self.flo_read[2] = str(chansum[0]/10)
 
             ads = ADS.ADS1115(self.i2c,gain=float(self.adc_gain) , data_rate=sample_rate_input, address=0x48)
+            flo_record.close()
             self.pop_up.dismiss()
         except:
             self.pop_up.dismiss()
-            print('ADC average blink sub failed')
+            flo_record.write('ADC average blink sub with gain control failed\n')
+            print('ADC average blink sub with gain control failed')
 
             
     def adc_aver(self):
@@ -666,6 +704,23 @@ class ShowcaseApp(App):
         self.show_popup()
         mythread = threading.Thread(target=self.adc_aver_with_blink_sub_gaincontrol_thread)
         mythread.start()
+
+    def create_fluorometer_record(self):
+        t = time.localtime()
+        self.name = time.strftime("%Y_%m_%d_%H_%M",t)
+        self.record_name = self.name
+        self.name = 'home/pi/Fluorometer/Records/' + self.name + '.txt'
+        self.f_record = True
+        flo_record = open(self.name, "w")
+
+    def export_to_usb(self):
+        try:
+            os.system("mount /dev/sda1 /mnt")
+            os.system("cp -r home/pi/Fluorometer/Records/ /mnt/")
+            time.sleep(3)
+            os.system("sudo umount /mnt")
+        except:
+            print("export USB failed")
 #-----------------------------DNA---------------------------------        
     def read_standard_1_thread(self):
         print('read stadndard 1')

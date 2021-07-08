@@ -14,17 +14,16 @@ ShowcaseScreen:
 			padding:20
 			spacing:30
 			Label:
-				
 				text:'{}'.format(app.flo_read[0])
-				font_size:60
-			Label:
+				font_size:50
 				
+			Label:
 				text:'{}'.format(app.flo_read[1])
-				font_size:60
-			Label:
+				font_size:50
 				
+			Label:
 				text:'{}'.format(app.flo_read[2])
-				font_size:60		
+				font_size:50		
 				
 		BoxLayout:
 			size_hint_y:0.4
@@ -39,10 +38,7 @@ ShowcaseScreen:
 				#text:"Always On"
 				#font_size:30
 				#on_release: app.adc_aver_with_led()
-			Button:
-				text:"Gain control"
-				font_size:30
-				on_release: app.adc_aver_with_blink_sub_gaincontrol()
+			
 			#Button:
 				#text:"LED Current"
 				#font_size:30
@@ -52,22 +48,37 @@ ShowcaseScreen:
 				#font_size:30
 				#on_release: app.adc_aver_with_blink()
 				
+			#Button:
+				#text:"Blink Sub"
+				#font_size:30
+				#on_release: app.adc_aver_with_blink_sub()	
+				
 			Button:
 				text:"Blink Sub"
 				font_size:30
-				on_release: app.adc_aver_with_blink_sub()	
+				on_release: app.adc_aver_with_blink_sub_gaincontrol()	
+				
+			Button:
+				text:"Export to USB"
+				font_size:30
+				on_release: app.export_to_usb()
 				
 		GridLayout:		
 			spacing:30
 			rows:2
-			cols:2
+			cols:3
 			size_hint_y:0.4
 			Label:
 				text:'adc gain'
-				font_size:18		
+				font_size:18	
+			Label:
+				id:record
+				text:app.record_name
+				font_size:18 			
 			Label:
 				text:'sample rate'
 				font_size:18			
+				
 			Spinner:
 				id:s_gain
 				text: '1'
@@ -78,6 +89,14 @@ ShowcaseScreen:
 					elif s_gain.text == "4": app.adc_gain = '4'
 					elif s_gain.text == "8": app.adc_gain = '8'
 					elif s_gain.text == "16": app.adc_gain = '16'
+					
+			Button:
+				text:"Record"
+				font_size:18
+				on_release: 
+					app.create_fluorometer_record()
+					#record.text = 'Recorded'
+							
 				
 			Spinner:
 				id:s_sample_rate
