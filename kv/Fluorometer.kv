@@ -8,27 +8,56 @@ ShowcaseScreen:
 		orientation: "vertical"
 		padding:20
 		spacing:30
-		BoxLayout:
-			size_hint_y:0.2
-			orientation: "horizontal"
-			padding:20
-			spacing:30
+		GridLayout:
+			rows:3
+			cols:4
+			size_hint_y:0.4
+			padding:10
+			spacing:10
+			Label:
+			Label:
+				text:'Ch1'
+				font_size:20
+			Label:
+				text:'Ref'
+				font_size:20
+			Label:
+				text:'Ch2'
+				font_size:20
+			Label:
+				text:'Read'	
+				font_size:20
 			Label:
 				text:'{}'.format(app.flo_read[0])
-				font_size:50
+				font_size:20
 				
 			Label:
 				text:'{}'.format(app.flo_read[1])
-				font_size:50
+				font_size:20
 				
 			Label:
 				text:'{}'.format(app.flo_read[2])
-				font_size:50		
+				font_size:20		
+			
+			Label:
+				text:'Gap'	
+				font_size:20
+			Label:
+				text:'{}'.format(app.gap_read[0])
+				font_size:20
 				
+			Label:
+				text:'{}'.format(app.gap_read[1])
+				font_size:20
+				
+			Label:
+				text:'{}'.format(app.gap_read[2])
+				font_size:20
+					
 		BoxLayout:
-			size_hint_y:0.4
+			size_hint_y:0.3
 			orientation: "horizontal"
-			padding:20
+			padding:5
 			spacing:30		
 			Button:
 				text:"No LED"
@@ -67,7 +96,7 @@ ShowcaseScreen:
 			spacing:30
 			rows:2
 			cols:3
-			size_hint_y:0.4
+			size_hint_y:0.3
 			Label:
 				text:'adc gain'
 				font_size:18	
