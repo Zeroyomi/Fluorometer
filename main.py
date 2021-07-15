@@ -1,5 +1,5 @@
-import board
-import busio
+#import board
+#import busio
 import os
 
 import time,threading
@@ -24,9 +24,9 @@ from kivy.uix.popup import Popup
 from kivy_garden.graph import Graph, MeshLinePlot, SmoothLinePlot, MeshStemPlot, PointPlot, ScatterPlot
 
 #hardware
-import adafruit_tlc59711
-import adafruit_ads1x15.ads1115 as ADS
-from adafruit_ads1x15.analog_in import AnalogIn
+#import adafruit_tlc59711
+#import adafruit_ads1x15.ads1115 as ADS
+#from adafruit_ads1x15.analog_in import AnalogIn
 
 class PopupBox(Popup):
     pop_up_text = ObjectProperty()
@@ -105,7 +105,7 @@ class ShowcaseApp(App):
     def build(self):
         self.root = Builder.load_file('kv/main.kv')
         self.title = 'Fluorometer'
-        Window.size = (800, 480)
+        Window.size = (480, 800)
         
         #self.go_home()
         self.hierarchy_index.append('home')
@@ -544,16 +544,17 @@ class ShowcaseApp(App):
             for i in range(128):                
                 
                 
-                #time.sleep(0.1)
+                
 
-         
+                 
                 self.leds._bcr = i
                 self.leds.show()
+                time.sleep(0.01)
                 #print("bc value " + str(self.leds._bcr))
                 chan1read2 = chan1.value
                 chan2read2 = chan2.value
                 chan3read2 = chan3.value
-                print(str(chan3read2) +" "+str(chan2read2) +" "+ str(chan1read2))
+                print(str(self.leds._bcr) + ": " + str(chan3read2) +" "+str(chan2read2) +" "+ str(chan1read2))
 
              
                 #self.leds[1] = (0, 0, 0)
@@ -580,6 +581,10 @@ class ShowcaseApp(App):
         chan1min = 32767
         chan1max = 0
         
+        ads = ADS.ADS1115(self.i2c,gain=1 , data_rate=8, address=0x48)
+       
+        #print(ads.mode)
+        
         if self.f_record:
             flo_record = open(self.name, "a")
         try:
@@ -587,6 +592,7 @@ class ShowcaseApp(App):
             gain_input = float(self.adc_gain)
             sample_rate_input = float(self.sample_rate)
             ads = ADS.ADS1115(self.i2c,gain=gain_input , data_rate=sample_rate_input, address=0x48)
+            
             chansum = [0, 0, 0]
             gap = [0, 0, 0]
             chan1 = AnalogIn(ads, ADS.P1)
@@ -611,8 +617,8 @@ class ShowcaseApp(App):
                 if self.f_record:
                     flo_record.write(str(chanread[1]) +" "+str(refread) +" "+ str(chanread[0]) +"\n")
                 self.leds[1] = (65535, 65535, 65535)
-                self.leds.show()
-                #time.sleep(0.1)
+                self.leds.show() #led first on
+                time.sleep(0.01) #delay
 
                 chanread2[0] = chan1.value
                 refread2 = chan2.value
@@ -636,7 +642,8 @@ class ShowcaseApp(App):
                             return
                        
                         self.leds[1] = (0, 0, 0)
-                        self.leds.show()
+                        self.leds.show() #led reset off
+                        time.sleep(0.01) #delay
                         ads = ADS.ADS1115(self.i2c, gain=gain_input , data_rate=sample_rate_input, address=0x48)
                         chan1 = AnalogIn(ads, ADS.P1)
                         chan2 = AnalogIn(ads, ADS.P2)
@@ -680,7 +687,8 @@ class ShowcaseApp(App):
                 flo_record.write(str(chanread[1]) +" "+str(refread) +" "+ str(chanread[0]) + "\n")
                 flo_record.write('------------------------\n')
             self.leds[1] = (0, 0, 0)
-            self.leds.show()
+            self.leds.show() #led first off
+            time.sleep(0.01) #delay
             pro_bar += 10
             
             #-------------------------read else 9----------------------
@@ -692,8 +700,8 @@ class ShowcaseApp(App):
                 if self.f_record:
                     flo_record.write(str(chanread[1]) +" "+str(refread) +" "+ str(chanread[0]) + "\n")
                 self.leds[1] = (65535, 65535, 65535)
-                self.leds.show()
-                #time.sleep(0.1)
+                self.leds.show() #led loop on
+                time.sleep(0.01) #delay
 
                 chanread2[0] = chan1.value
                 refread2 = chan2.value
@@ -731,8 +739,8 @@ class ShowcaseApp(App):
                     flo_record.write(str(chanread[1]) +" "+str(refread) +" "+ str(chanread[0]) + "\n")
                     flo_record.write('------------------------\n')
                 self.leds[1] = (0, 0, 0)
-                self.leds.show()
-                #time.sleep(0.1)
+                self.leds.show() #led loop off
+                time.sleep(0.01) #delay
                 pro_bar += 10
                 self.pop_up.set_bar(pro_bar)
                 

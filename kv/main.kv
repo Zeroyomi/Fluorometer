@@ -24,13 +24,13 @@ BoxLayout:
 
     canvas.before:
         Color:
-            rgb: .6, .6, .6
+            #rgb: .6, .6, .6
         Rectangle:
             size: self.size
-            source: './images/background_b.png'
+            source: './images/background_w.png'
 	
 	FloatLayout:
-		size_hint: 1, None
+		size_hint:(1,0.08)
         height: 64
 		
 		
@@ -39,33 +39,41 @@ BoxLayout:
 			id:main_label
 			pos:(0, root.height - self.height)
 			text:"Choose an assay"
-			#size_hint: (1, 0.2)
-			font_size:48
-			background_color:(.6,.4,.4,1)
-			canvas.before:
-				Color:
-					rgba:self.background_color
-				Rectangle:
-					size: self.size
-					pos: self.pos
-            
+			#color:'#ffffff'
+			#size_hint: (1, 0.4)
+			font_size:40
+			background_color:(255,255,255,1)
+			
+			#canvas.before:
+				#Color:
+					#rgba:self.background_color
+				#Rectangle:
+					#size: self.size
+					#pos: self.pos
+				#Line:
+					#width: 5
+					#rectangle: self.x - 10, self.y, self.width + 20, self.height
 		Button:
 			id:back_btn
-			background_normal:'./images/chevron-left.png'
+			disabled:False
+			background_disabled_normal: './images/back_disable.png'
+			background_normal:'./images/back.png' 
+			background_down:'./images/back.png' 
 			pos:(0, root.height - self.height)
 			size_hint: (None, None)
 			size:64,64
-			disabled:False
+			
 			on_release:app.go_previous()
    
 
     ScreenManager:
+		size_hint:(1,0.8)
         id: sm
         #on_current_screen:
             
 	GridLayout:
 		cols:2
-		size_hint:(1,0.2)
+		size_hint:(1,0.1)
 		
 		Button:
 			
@@ -73,12 +81,16 @@ BoxLayout:
 			
 			text:"Menu"
 			font_size:36
+			background_normal: ''
+			background_color: '#c40e25'
 			on_release:app.go_home()
 		Button:
 			
 			id:set
 			text:"Settings"
 			font_size:36
+			background_normal: ''
+			background_color: '#c40e25'
 			on_release:app.go_settings()
 			
 <PopupBox>:

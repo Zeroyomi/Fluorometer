@@ -11,57 +11,77 @@ ShowcaseScreen:
 		GridLayout:
 			rows:3
 			cols:4
-			size_hint_y:0.4
+			size_hint_y:0.5
 			padding:10
 			spacing:10
+			canvas.before:
+				Color:
+					rgba:1,1,1,0.7
+				Rectangle:
+					size: self.size
+					pos: self.pos
+				Line:
+					width: 5
+					rectangle: self.x, self.y, self.width, self.height
 			Label:
 			Label:
 				text:'Ch1'
-				font_size:20
+				font_size:30
+				color:0, 0, 0, 1 
 			Label:
 				text:'Ref'
-				font_size:20
+				font_size:30
+				color:0, 0, 0, 1 
 			Label:
 				text:'Ch2'
-				font_size:20
+				font_size:30
+				color:0, 0, 0, 1 
 			Label:
 				text:'Read'	
-				font_size:20
+				font_size:30
+				color:0, 0, 0, 1 
 			Label:
 				text:'{}'.format(app.flo_read[0])
 				font_size:20
+				color:0, 0, 0, 1 
 				
 			Label:
 				text:'{}'.format(app.flo_read[1])
 				font_size:20
+				color:0, 0, 0, 1 
 				
 			Label:
 				text:'{}'.format(app.flo_read[2])
-				font_size:20		
+				font_size:20	
+				color:0, 0, 0, 1 		
 			
 			Label:
 				text:'Gap'	
-				font_size:20
+				font_size:30
+				color:0, 0, 0, 1 
 			Label:
 				text:'{}'.format(app.gap_read[0])
 				font_size:20
-				
+				color:0, 0, 0, 1 
 			Label:
 				text:'{}'.format(app.gap_read[1])
 				font_size:20
-				
+				color:0, 0, 0, 1 
 			Label:
 				text:'{}'.format(app.gap_read[2])
 				font_size:20
+				color:0, 0, 0, 1 
 					
 		BoxLayout:
-			size_hint_y:0.3
+			size_hint_y:0.2
 			orientation: "horizontal"
 			padding:5
 			spacing:30		
 			Button:
-				text:"No LED"
-				font_size:30
+				#text:"No LED"
+				#font_size:30
+				background_normal:'./images/LED_off.png'
+				background_down:'./images/LED_off_press.png' 
 				on_release: app.adc_aver()
 			#Button:
 				#text:"Always On"
@@ -69,7 +89,8 @@ ShowcaseScreen:
 				#on_release: app.adc_aver_with_led()
 			
 			#Button:
-				#text:"LED Current"
+				#id:LED_current
+				#text:"C"
 				#font_size:30
 				#on_release: app.read_led_current()	
 			#Button:
@@ -83,13 +104,17 @@ ShowcaseScreen:
 				#on_release: app.adc_aver_with_blink_sub()	
 				
 			Button:
-				text:"Blink Sub"
-				font_size:30
+				#text:"Blink Sub"
+				#font_size:30
+				background_normal:'./images/LED.png'
+				background_down:'./images/LED_press.png' 
 				on_release: app.adc_aver_with_blink_sub_gaincontrol()	
 				
 			Button:
-				text:"Export to USB"
-				font_size:30
+				#text:"Export to USB"
+				#font_size:30
+				background_normal:'./images/usb.png'
+				background_down:'./images/usb_press.png' 
 				on_release: app.export_to_usb()
 				
 		GridLayout:		
@@ -99,18 +124,23 @@ ShowcaseScreen:
 			size_hint_y:0.3
 			Label:
 				text:'adc gain'
+				color:'FF8000'
 				font_size:18	
 			Label:
 				id:record
 				text:app.record_name
+				color:'FF8000'
 				font_size:18 			
 			Label:
 				text:'sample rate'
+				color:'FF8000'
 				font_size:18			
 				
 			Spinner:
 				id:s_gain
 				text: '1'
+				background_normal: ''
+				background_color: '#c40e25'	
 				values: ('1', '2', '4', '8','16')
 				on_text: 
 					if s_gain.text == "1": app.adc_gain = '1'
@@ -122,6 +152,8 @@ ShowcaseScreen:
 			Button:
 				text:"Record"
 				font_size:18
+				background_normal: ''
+				background_color: '#c40e25'
 				on_release: 
 					app.create_fluorometer_record()
 					#record.text = 'Recorded'
@@ -129,6 +161,8 @@ ShowcaseScreen:
 				
 			Spinner:
 				id:s_sample_rate
+				background_normal: ''
+				background_color: '#c40e25'
 				text: '8'
 				values: ('8', '16', '32', '64', '128','250','475','860')
 				on_text: 
