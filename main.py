@@ -1,5 +1,5 @@
-import board
-import busio
+#import board
+#import busio
 import os
 
 import time,threading
@@ -24,9 +24,9 @@ from kivy.uix.popup import Popup
 from kivy_garden.graph import Graph, MeshLinePlot, SmoothLinePlot, MeshStemPlot, PointPlot, ScatterPlot
 
 #hardware
-import adafruit_tlc59711
-import adafruit_ads1x15.ads1115 as ADS
-from adafruit_ads1x15.analog_in import AnalogIn
+#import adafruit_tlc59711
+#import adafruit_ads1x15.ads1115 as ADS
+#from adafruit_ads1x15.analog_in import AnalogIn
 
 class PopupBox(Popup):
     pop_up_text = ObjectProperty()
