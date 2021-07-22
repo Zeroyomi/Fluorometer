@@ -1,5 +1,5 @@
-#import board
-#import busio
+import board
+import busio
 import os
 
 import time,threading
@@ -24,9 +24,9 @@ from kivy.uix.popup import Popup
 from kivy_garden.graph import Graph, MeshLinePlot, SmoothLinePlot, MeshStemPlot, PointPlot, ScatterPlot
 
 #hardware
-#import adafruit_tlc59711
-#import adafruit_ads1x15.ads1115 as ADS
-#from adafruit_ads1x15.analog_in import AnalogIn
+import adafruit_tlc59711
+import adafruit_ads1x15.ads1115 as ADS
+from adafruit_ads1x15.analog_in import AnalogIn
 
 class PopupBox(Popup):
     pop_up_text = ObjectProperty()
@@ -51,8 +51,12 @@ class ShowcaseApp(App):
     gap_read = ListProperty([0,0,0])
     hierarchy_index = ListProperty([])
     DNA_result = StringProperty()
+    
     adc_gain = StringProperty()
     sample_rate = StringProperty()
+    flo_delay_time = StringProperty()
+    led_current = StringProperty()
+    
     record_name = StringProperty('not record')
     #config
     config = configparser.ConfigParser()
@@ -63,7 +67,9 @@ class ShowcaseApp(App):
     led_blue_on = False
     adc_gain = '1'
     sample_rate = '8'
-    unit = NumericProperty(1)
+    flo_delay_time = '0.01'
+    led_current = '127'
+    #unit = NumericProperty(1)
     home_screen = Builder.load_file("./kv/home.kv")
     setting_screen = Builder.load_file("./kv/settings.kv")
     
@@ -289,7 +295,7 @@ class ShowcaseApp(App):
             print('ADC diff test failed')
 
     def time_test(self):
-        ads = ADS.ADS1115(self.i2c,gain=1 , data_rate=8, address=0x48)
+        ads = ADS.ADS1115(self.i2c,gain=16 , data_rate=16, address=0x48)
         #self.leds[0] = (65535, 65535, 65535)
         #self.leds.show()
         chan2 = AnalogIn(ads, ADS.P2)
@@ -314,7 +320,77 @@ class ShowcaseApp(App):
            
         self.leds[1] = (0,0,0)
         self.leds.show()
+        
+    def time_test_flo(self):
+        chan_dark = [0, 0]
+        chan_read =  [0, 0]    
+        ads = ADS.ADS1115(self.i2c,gain=1 , data_rate=16, address=0x48)
+        self.leds._bcr = 64
+        print("LED current")
+        print(self.leds._bcr)
+        chan1 = AnalogIn(ads, ADS.P1)
+        #chan2 = AnalogIn(ads, ADS.P2)
+        chan3 = AnalogIn(ads, ADS.P3)
+        print(time.ctime())
+        
+        for i in range(2000):
+            time.sleep(0.01) #delay
+            chan_dark[0] = chan1.value #read off
+            chan_dark[1] = chan3.value
+             
+            self.leds[1] = (65535, 65535, 65535)
+            self.leds.show() #led on
+            time.sleep(0.01) #delay
+            chan_read[0] = chan1.value #read on
+            chan_read[1] = chan3.value
+            self.leds[1] = (0, 0, 0)
+            self.leds.show() #led off
+            print(str(chan_dark[1]) + " " + str(chan_read[1]) + " " + str(chan_dark[0]) + " " + str(chan_read[0])) 
+            
+        print('--------end----------')
+        print(time.ctime())   
+            
+           
+        self.leds[1] = (0,0,0)
+        self.leds.show()
 
+    def time_test_flo_always_on(self):
+        chan_dark = [0, 0]
+        chan_read =  [0, 0]    
+        ads = ADS.ADS1115(self.i2c,gain=1 , data_rate=16, address=0x48)
+        self.leds._bcr = 64
+        print("LED current")
+        print(self.leds._bcr)
+        chan1 = AnalogIn(ads, ADS.P1)
+        #chan2 = AnalogIn(ads, ADS.P2)
+        chan3 = AnalogIn(ads, ADS.P3)
+        print(time.ctime())
+        print('--------led off----------')
+        chan_dark[0] = chan1.value #read off
+        chan_dark[1] = chan3.value
+        print(str(chan_dark[1]) + " " + str(chan_dark[0]))
+        
+        time.sleep(0.01) #delay
+        self.leds[1] = (65535, 65535, 65535)
+        self.leds.show() #led on
+        time.sleep(0.01) #delay
+        print('--------begin----------')
+        for i in range(2000):
+            
+            
+            chan_read[0] = chan1.value #read on
+            chan_read[1] = chan3.value
+            time.sleep(0.01) #delay
+            print(str(chan_read[1]) + " " + str(chan_read[0]))
+            
+        self.leds[1] = (0, 0, 0)
+        self.leds.show() #led off    
+        print('--------end----------')
+        print(time.ctime())   
+            
+           
+        self.leds[1] = (0,0,0)
+        self.leds.show()        
 #-----------------------------Fluorometer---------------------------------
     def show_popup(self):
         self.pop_up = Factory.PopupBox()
@@ -322,7 +398,7 @@ class ShowcaseApp(App):
         self.pop_up.open()        
        
             
-    def adc_aver_thread(self):
+    def adc_aver_thread(self): #No Led
         chan0min = 32767
         chan0max = 0
         refmin = 32767
@@ -391,46 +467,142 @@ class ShowcaseApp(App):
         except:
             self.pop_up.dismiss()
             print('ADC average test failed')
+           
+    def adc_aver_with_led_thread(self): #LED always on mode
+        chan0min = 32767
+        chan0max = 0
+        refmin = 32767
+        refmax = 0 
+        chan1min = 32767
+        chan1max = 0
+        chan_dark = [0, 0]
+        chan_sum = [0, 0, 0]
+        chan_read =  [0, 0]
+        chan_result = [0, 0, 0]
+        gap = [0, 0, 0]
+        
+        delay_time = float(self.flo_delay_time)
+        gain_input = float(self.adc_gain)
+        sample_rate_input = float(self.sample_rate)
+        self.leds._bcr = int(self.led_current)
+        
+        if self.f_record:
+            flo_record = open(self.name, "a")
             
-    def adc_aver_with_led_thread(self):
         try:
-            pro_bar = 0
-            gain_input = float(self.adc_gain)
-            sample_rate_input = float(self.sample_rate)
             ads = ADS.ADS1115(self.i2c,gain=gain_input , data_rate=sample_rate_input, address=0x48)
-            self.leds[1] = (65535, 65535, 65535)
-            self.leds.show()
-            time.sleep(0.3)
-            chan1sum = 0
-            chan2sum = 0
-            chan3sum = 0
+            print('')
+            print('')
+            print('No blink test')
+            print("-----------delay time [" + str(delay_time) + "] current [" + str(self.leds._bcr) + "] ------------\n")    
+            if self.f_record:
+                flo_record.write('\n')
+                flo_record.write('\n')
+                flo_record.write('No blink test\n')
+                flo_record.write("-----------delay time [" + str(delay_time) + "] current [" + str(self.leds._bcr) + "] ------------\n")
+                    
+            pro_bar = 0
+           
+            
+
+            
             chan1 = AnalogIn(ads, ADS.P1)
             chan2 = AnalogIn(ads, ADS.P2)
             chan3 = AnalogIn(ads, ADS.P3)
+
+            chan_dark[0] = chan1.value
+            chan_ref_dark = chan2.value
+            chan_dark[1] = chan3.value
+
+            
+            
+            
+            self.leds[1] = (65535, 65535, 65535) #led on
+            self.leds.show()
+            time.sleep(delay_time) #delay
+            
             for i in range(10):
-                chan1read = chan1.value
-                chan2read = chan2.value
-                chan3read = chan3.value
-                chan1sum = chan1sum + chan1read
-                chan2sum = chan2sum + chan2read
-                chan3sum = chan3sum + chan3read
-                print(str(chan3read) +" "+str(chan2read) +" "+ str(chan1read))
-                time.sleep(0.3)
+                chan_read[0] = chan1.value
+                chan_ref = chan2.value
+                chan_read[1] = chan3.value
+
+                if chan0min > chan_read[0]:
+                    chan0min = chan_read[0]
+                if chan0max < chan_read[0]:
+                    chan0max = chan_read[0]
+                  
+                if refmin > chan_ref:
+                    refmin = chan_ref
+                if refmax < chan_ref:
+                    refmax = chan_ref
+                        
+                if chan1min > chan_read[1]:
+                    chan1min = chan_read[1]
+                if chan1max < chan_read[1]:
+                    chan1max = chan_read[1]    
+                
+                chan_sum[0] = chan_sum[0] + chan_read[0]
+                chan_sum[1] = chan_sum[1] + chan_ref
+                chan_sum[2] = chan_sum[2] + chan_read[1]
+
+                
+                print(str(chan_read[1]) + " " + str(chan_ref) + " " + str(chan_read[0]))
+                if self.f_record:
+                    flo_record.write(str(chan_read[1]) + " " + str(chan_ref) + " " + str(chan_read[0]) + "\n")                
+
                 pro_bar += 10
                 self.pop_up.set_bar(pro_bar)
-            print("result led always on: ")
-            print(str(chan3sum/10)+" "+str(chan2sum/10)+" "+str(chan1sum/10))
-            self.leds[1] = (0, 0, 0)
-            self.leds.show()
-            self.flo_read[0] = str(chan3sum/10)
-            self.flo_read[1] = str(chan2sum/10)
-            self.flo_read[2] = str(chan1sum/10)
+
+            self.leds[1] = (0, 0, 0) #led off
+            self.leds.show()    
+
+            
+            chan_result[0] = chan_sum[0]/10 - chan_dark[0] 
+            chan_result[1] = chan_sum[1]/10 - chan_ref_dark
+            chan_result[2] = chan_sum[2]/10 - chan_dark[1]
+            
+            #show result
+            chan_result[0] = round(chan_result[0], 1)
+            chan_result[1] = round(chan_result[1], 1)
+            chan_result[2] = round(chan_result[2], 1)
+            
+            print("result led no blink: ")
+            print('Dark: ' + str(chan_dark[1]) + " " + str(chan_ref_dark) + " " + str(chan_dark[0]))
+            print('Aver: ' + str(chan_sum[2]/10)+ " " +str(chan_sum[1]/10) + " " +str(chan_sum[0]/10))
+            print('Sub: ' + str(chan_result[2])+ " " +str(chan_result[1]) + " " +str(chan_result[0]))
+            print('------------------------')
+
+            if self.f_record:
+                flo_record.write("result led no blink: \n")
+                flo_record.write('Dark: ' + str(chan_dark[1]) +" "+str(chan_ref_dark) +" "+ str(chan_dark[0]) + "\n")
+                flo_record.write('Aver: ' + str(chan_sum[2]/10)+ " " +str(chan_sum[1]/10) + " " +str(chan_sum[0]/10) + "\n")
+                flo_record.write('Sub: ' + str(chan_result[2])+ " " +str(chan_result[1]) + " " +str(chan_result[0]) + "\n")
+                flo_record.write('---------------------------------------------------------------------------------------------------------------------------\n')
+                
+            self.flo_read[0] = str(chan_result[2])
+            self.flo_read[1] = str(chan_result[1])
+            self.flo_read[2] = str(chan_result[0])
+
+            gap[0] = chan0max - chan0min
+            gap[1] = refmax - refmin
+            gap[2] = chan1max - chan1min
+            
+            print('Gap:')
+            print('Max: ' + str(chan1max) + " " +str(refmax) + " " + str(chan0max))
+            print('Min: ' + str(chan1min) + " " +str(refmin) + " " + str(chan0min))
+            print('Result: ' + str(gap[2]) + " " +str(gap[1]) + " " + str(gap[0]))
+            print('------------------------------------------------------------------------------')
+            self.gap_read[0] = str(gap[2])
+            self.gap_read[1] = str(gap[1])
+            self.gap_read[2] = str(gap[0])
+            
             self.pop_up.dismiss()
+            
         except:
             self.pop_up.dismiss()
-            print('ADC average led always on failed')
+            print('ADC average led no blink failed')
     
-   
+    """ 
     def adc_aver_with_blink_thread(self):
         try:
             pro_bar = 0
@@ -469,7 +641,7 @@ class ShowcaseApp(App):
         except:
             self.pop_up.dismiss()
             print('ADC average blink failed')
-            
+           
     def adc_aver_with_blink_sub_thread(self):
         try:
             pro_bar = 0
@@ -524,53 +696,8 @@ class ShowcaseApp(App):
         except:
             self.pop_up.dismiss()
             print('ADC average blink failed')
-            
-    def read_led_current_thread(self):
-        try:
-            pro_bar = 0
-            gain_input = float(self.adc_gain)
-            sample_rate_input = float(self.sample_rate)
-            ads = ADS.ADS1115(self.i2c,gain=gain_input , data_rate=sample_rate_input, address=0x48)
-            #chan1sum = 0
-            #chan2sum = 0
-            #chan3sum = 0
-            chan1 = AnalogIn(ads, ADS.P1)
-            chan2 = AnalogIn(ads, ADS.P2)
-            chan3 = AnalogIn(ads, ADS.P3)
-            print('')
-            
-            self.leds[1] = (65535, 65535, 65535)
-            
-            for i in range(128):                
-                
-                
-                
+    """        
 
-                 
-                self.leds._bcr = i
-                self.leds.show()
-                time.sleep(0.01)
-                #print("bc value " + str(self.leds._bcr))
-                chan1read2 = chan1.value
-                chan2read2 = chan2.value
-                chan3read2 = chan3.value
-                print(str(self.leds._bcr) + ": " + str(chan3read2) +" "+str(chan2read2) +" "+ str(chan1read2))
-
-             
-                #self.leds[1] = (0, 0, 0)
-                #self.leds.show()
-                #time.sleep(0.1)
-                pro_bar += 100/128
-                self.pop_up.set_bar(pro_bar)
-                
-            print('------------------------')
-            self.leds._bcr = 127
-            self.leds[1] = (0, 0, 0)
-            self.leds.show()
-            self.pop_up.dismiss()
-        except:
-            self.pop_up.dismiss()
-            print('LED Current test failed')
 
     def adc_aver_with_blink_sub_gaincontrol_thread(self):
         gainrange = [1, 2, 4, 8, 16]
@@ -580,36 +707,43 @@ class ShowcaseApp(App):
         refmax = 0 
         chan1min = 32767
         chan1max = 0
+        chansum = [0, 0, 0]
+        gap = [0, 0, 0]
         
-        ads = ADS.ADS1115(self.i2c,gain=1 , data_rate=8, address=0x48)
-       
+        chanread = [0, 0]
+        chanread2 = [0, 0]
+
+        delay_time = float(self.flo_delay_time)
+        gain_input = float(self.adc_gain)
+        sample_rate_input = float(self.sample_rate)
+        self.leds._bcr = int(self.led_current)
+        #ads = ADS.ADS1115(self.i2c,gain=1 , data_rate=8, address=0x48)
+        #self.leds._bcr = 64
         #print(ads.mode)
         
         if self.f_record:
             flo_record = open(self.name, "a")
         try:
             pro_bar = 0
-            gain_input = float(self.adc_gain)
-            sample_rate_input = float(self.sample_rate)
             ads = ADS.ADS1115(self.i2c,gain=gain_input , data_rate=sample_rate_input, address=0x48)
-            
-            chansum = [0, 0, 0]
-            gap = [0, 0, 0]
             chan1 = AnalogIn(ads, ADS.P1)
             chan2 = AnalogIn(ads, ADS.P2)
             chan3 = AnalogIn(ads, ADS.P3)
-            chanread = [0, 0]
-            chanread2 = [0, 0]
+            
             #--------------------------first read------------------
             for ap in gainrange:
                 pass_flag = True
                 print('')
                 print('')
                 print("-----------start over with amplify [" + str(ap) + "] gain [" + str(gain_input) + "]--------------")
+                print("-----------delay time [" + str(delay_time) + "] current [" + str(self.leds._bcr) + "] ------------\n")
+                print(delay_time)
                 if self.f_record:
                     flo_record.write('\n')
                     flo_record.write('\n')
+                    flo_record.write('Blink test\n')
                     flo_record.write("-----------start over with amplify [" + str(ap) + "] gain [" + str(gain_input) + "]--------------\n")
+                    flo_record.write("-----------delay time [" + str(delay_time) + "] current [" + str(self.leds._bcr) + "] ------------\n")
                 chanread[0] = chan1.value
                 refread = chan2.value
                 chanread[1] = chan3.value
@@ -618,7 +752,7 @@ class ShowcaseApp(App):
                     flo_record.write(str(chanread[1]) +" "+str(refread) +" "+ str(chanread[0]) +"\n")
                 self.leds[1] = (65535, 65535, 65535)
                 self.leds.show() #led first on
-                time.sleep(0.01) #delay
+                time.sleep(delay_time) #delay
 
                 chanread2[0] = chan1.value
                 refread2 = chan2.value
@@ -636,14 +770,12 @@ class ShowcaseApp(App):
                             print('reach minimal gain, abort')
                             if self.f_record:
                                 flo_record.write('reach minimal gain, abort\n')
-                            if self.f_record:
-                                flo_record.write()
                             self.pop_up.dismiss()
                             return
                        
                         self.leds[1] = (0, 0, 0)
                         self.leds.show() #led reset off
-                        time.sleep(0.01) #delay
+                        time.sleep(delay_time) #delay
                         ads = ADS.ADS1115(self.i2c, gain=gain_input , data_rate=sample_rate_input, address=0x48)
                         chan1 = AnalogIn(ads, ADS.P1)
                         chan2 = AnalogIn(ads, ADS.P2)
@@ -688,7 +820,7 @@ class ShowcaseApp(App):
                 flo_record.write('------------------------\n')
             self.leds[1] = (0, 0, 0)
             self.leds.show() #led first off
-            time.sleep(0.01) #delay
+            time.sleep(delay_time) #delay
             pro_bar += 10
             
             #-------------------------read else 9----------------------
@@ -701,7 +833,7 @@ class ShowcaseApp(App):
                     flo_record.write(str(chanread[1]) +" "+str(refread) +" "+ str(chanread[0]) + "\n")
                 self.leds[1] = (65535, 65535, 65535)
                 self.leds.show() #led loop on
-                time.sleep(0.01) #delay
+                time.sleep(delay_time) #delay
 
                 chanread2[0] = chan1.value
                 refread2 = chan2.value
@@ -740,7 +872,7 @@ class ShowcaseApp(App):
                     flo_record.write('------------------------\n')
                 self.leds[1] = (0, 0, 0)
                 self.leds.show() #led loop off
-                time.sleep(0.01) #delay
+                time.sleep(delay_time) #delay
                 pro_bar += 10
                 self.pop_up.set_bar(pro_bar)
                 
@@ -749,7 +881,7 @@ class ShowcaseApp(App):
             if self.f_record:
                 flo_record.write("result blink sub with gain control: \n")
                 flo_record.write(str(chansum[2]/10)+" "+str(chansum[1]/10)+" "+str(chansum[0]/10) + "\n")
-            
+                flo_record.write('---------------------------------------------------------------------------------------------------------------------------\n')
             self.flo_read[0] = str(chansum[2]/10)
             self.flo_read[1] = str(chansum[1]/10)
             self.flo_read[2] = str(chansum[0]/10)
@@ -757,14 +889,15 @@ class ShowcaseApp(App):
             gap[0] = chan0max - chan0min
             gap[1] = refmax - refmin
             gap[2] = chan1max - chan1min
+            
             print('Gap:')
-            print(str(chan1max)+" "+str(refmax)+" "+str(chan0max))
-            print(str(chan1min)+" "+str(refmin)+" "+str(chan0min))
-            print(str(gap[2])+" "+str(gap[1])+" "+str(gap[0]))
-            print('------------------')
-            self.gap_read[0] = str(gap[0])
+            print('Max: ' + str(chan1max)+" "+str(refmax)+" "+str(chan0max))
+            print('Min: ' + str(chan1min)+" "+str(refmin)+" "+str(chan0min))
+            print('Result: ' + str(gap[2])+" "+str(gap[1])+" "+str(gap[0]))
+            print('------------------------------------------------------------------------------')
+            self.gap_read[0] = str(gap[2])
             self.gap_read[1] = str(gap[1])
-            self.gap_read[2] = str(gap[2])
+            self.gap_read[2] = str(gap[0])
             
             ads = ADS.ADS1115(self.i2c,gain=float(self.adc_gain) , data_rate=sample_rate_input, address=0x48)
             if self.f_record:
@@ -777,6 +910,48 @@ class ShowcaseApp(App):
             print('ADC average blink sub with gain control failed')
 
             
+    def read_led_current_thread(self):
+        try:
+            pro_bar = 0
+            gain_input = float(self.adc_gain)
+            sample_rate_input = float(self.sample_rate)
+            ads = ADS.ADS1115(self.i2c,gain=gain_input , data_rate=sample_rate_input, address=0x48)
+            #chan1sum = 0
+            #chan2sum = 0
+            #chan3sum = 0
+            chan1 = AnalogIn(ads, ADS.P1)
+            chan2 = AnalogIn(ads, ADS.P2)
+            chan3 = AnalogIn(ads, ADS.P3)
+            print('')
+            
+            self.leds[1] = (65535, 65535, 65535)
+            
+            for i in range(128):                
+                self.leds._bcr = i
+                self.leds.show()
+                time.sleep(0.01)
+                #print("bc value " + str(self.leds._bcr))
+                chan1read2 = chan1.value
+                chan2read2 = chan2.value
+                chan3read2 = chan3.value
+                print(str(self.leds._bcr) + ": " + str(chan3read2) +" "+str(chan2read2) +" "+ str(chan1read2))
+
+             
+                #self.leds[1] = (0, 0, 0)
+                #self.leds.show()
+                #time.sleep(0.1)
+                pro_bar += 100/128
+                self.pop_up.set_bar(pro_bar)
+                
+            print('------------------------')
+            self.leds._bcr = 127
+            self.leds[1] = (0, 0, 0)
+            self.leds.show()
+            self.pop_up.dismiss()
+        except:
+            self.pop_up.dismiss()
+            print('LED Current test failed')
+            
     def adc_aver(self):
         self.show_popup()
         mythread = threading.Thread(target=self.adc_aver_thread)
@@ -786,7 +961,7 @@ class ShowcaseApp(App):
         self.show_popup()
         mythread = threading.Thread(target=self.adc_aver_with_led_thread)
         mythread.start()
-        
+    """    
     def adc_aver_with_blink(self):
         self.show_popup()
         mythread = threading.Thread(target=self.adc_aver_with_blink_thread)
@@ -796,17 +971,19 @@ class ShowcaseApp(App):
         self.show_popup()
         mythread = threading.Thread(target=self.adc_aver_with_blink_sub_thread)
         mythread.start()
-        
-    def read_led_current(self):
-        self.show_popup()
-        mythread = threading.Thread(target=self.read_led_current_thread)
-        mythread.start()
+    """    
+
 
     def adc_aver_with_blink_sub_gaincontrol(self):
         self.show_popup()
         mythread = threading.Thread(target=self.adc_aver_with_blink_sub_gaincontrol_thread)
         mythread.start()
-
+        
+    def read_led_current(self):
+        self.show_popup()
+        mythread = threading.Thread(target=self.read_led_current_thread)
+        mythread.start()
+        
     def create_fluorometer_record(self):
         t = time.localtime()
         self.name = time.strftime("%Y_%m_%d_%H_%M",t)

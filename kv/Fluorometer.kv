@@ -77,16 +77,18 @@ ShowcaseScreen:
 			orientation: "horizontal"
 			padding:5
 			spacing:30		
-			Button:
+			#Button:
 				#text:"No LED"
 				#font_size:30
+				#background_normal:'./images/LED_off.png'
+				#background_down:'./images/LED_off_press.png' 
+				#on_release: app.adc_aver()
+			Button:
+				#text:"Always On"
+				font_size:30
 				background_normal:'./images/LED_off.png'
 				background_down:'./images/LED_off_press.png' 
-				on_release: app.adc_aver()
-			#Button:
-				#text:"Always On"
-				#font_size:30
-				#on_release: app.adc_aver_with_led()
+				on_release: app.adc_aver_with_led()
 			
 			#Button:
 				#id:LED_current
@@ -119,7 +121,7 @@ ShowcaseScreen:
 				
 		GridLayout:		
 			spacing:30
-			rows:2
+			rows:3
 			cols:3
 			size_hint_y:0.3
 			Label:
@@ -174,3 +176,27 @@ ShowcaseScreen:
 					elif s_sample_rate.text == "250": app.sample_rate = '250'
 					elif s_sample_rate.text == "475": app.sample_rate = '475'
 					elif s_sample_rate.text == "860": app.sample_rate = '860'
+					
+			Spinner:
+				id:s_delay_time
+				background_normal: ''
+				background_color: '#c40e25'
+				text: '0.01'
+				values: ('0.01', '0.05', '0.1', '1')
+				on_text: 
+					if s_delay_time.text == "0.01": app.flo_delay_time = '0.01'
+					elif s_delay_time.text == "0.05": app.flo_delay_time = '0.05'
+					elif s_delay_time.text == "0.1": app.flo_delay_time = '0.1'
+					elif s_delay_time.text == "1": app.flo_delay_time = '1'
+							
+			Spinner:
+				id:s_led_current
+				background_normal: ''
+				background_color: '#c40e25'
+				text: '127'
+				values: ('127', '64', '32', '16')
+				on_text: 
+					if s_led_current.text == "127": app.led_current = '127'
+					elif s_led_current.text == "64": app.led_current = '64'
+					elif s_led_current.text == "32": app.led_current = '32'
+					elif s_led_current.text == "16": app.led_current = '16'
