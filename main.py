@@ -42,8 +42,15 @@ class ShowcaseScreen(Screen):
         if 'content' in self.ids:
             return self.ids.content.add_widget(*args)
         return super(ShowcaseScreen, self).add_widget(*args)
+    '''
+    def __init__(self, **args):
+        #Clock.schedule_once(self.init_widget, 0)
+        return super(ShowcaseScreen, self).__init__(**args)
 
-
+    def update_file_list_entry(self, file_chooser, file_list_entry, *args):
+        file_list_entry.children[0].color = (0.0, 0.0, 0.0, 1.0)  # File Names
+        file_list_entry.children[1].color = (0.0, 0.0, 0.0, 1.0)  # Dir Names`
+    '''
 class ShowcaseApp(App):
     #kivy properties
     brightness = StringProperty()
@@ -56,6 +63,7 @@ class ShowcaseApp(App):
     sample_rate = StringProperty()
     flo_delay_time = StringProperty()
     led_current = StringProperty()
+    sample_times = StringProperty()
     
     record_name = StringProperty('not record')
     #config
@@ -69,6 +77,7 @@ class ShowcaseApp(App):
     sample_rate = '8'
     flo_delay_time = '0.01'
     led_current = '127'
+    sample_times = '5'
     #unit = NumericProperty(1)
     home_screen = Builder.load_file("./kv/home.kv")
     setting_screen = Builder.load_file("./kv/settings.kv")
@@ -452,12 +461,13 @@ class ShowcaseApp(App):
             self.flo_read[2] = str(chansum[0]/10)
 
             gap[0] = chan0max - chan0min
-            gap[1] = refmax - refmin
-            gap[2] = chan1max - chan1min
+            gap_ref = refmax - refmin
+            gap[1] = chan1max - chan1min
+            
             print('Gap:')
-            print(str(chan1max)+" "+str(refmax)+" "+str(chan0max))
-            print(str(chan1min)+" "+str(refmin)+" "+str(chan0min))
-            print(str(gap[2])+" "+str(gap[1])+" "+str(gap[0]))
+            print(str(chan0max)+" "+str(chan1max)+" "+str(refmax))
+            print(str(chan0min)+" "+str(chan1min)+" "+str(refmin))
+            print(str(gap[0])+" "+str(gap[1])+" "+str(gap[0]))
             print('------------------')
             self.gap_read[0] = str(gap[0])
             self.gap_read[1] = str(gap[1])
@@ -475,16 +485,20 @@ class ShowcaseApp(App):
         refmax = 0 
         chan1min = 32767
         chan1max = 0
+        
+        chan_gap = [0, 0]
         chan_dark = [0, 0]
-        chan_sum = [0, 0, 0]
-        chan_read =  [0, 0]
-        chan_result = [0, 0, 0]
-        gap = [0, 0, 0]
+        chan_light = [0, 0]
+        chan_result = [0, 0]
+        chan_sum = [0, 0]
+        ref_sum = 0
+        
         
         delay_time = float(self.flo_delay_time)
         gain_input = float(self.adc_gain)
         sample_rate_input = float(self.sample_rate)
         self.leds._bcr = int(self.led_current)
+        s_times = int(self.sample_times)
         
         if self.f_record:
             flo_record = open(self.name, "a")
@@ -506,13 +520,13 @@ class ShowcaseApp(App):
             
 
             
+            chan0 = AnalogIn(ads, ADS.P3)
+            chanref = AnalogIn(ads, ADS.P2)
             chan1 = AnalogIn(ads, ADS.P1)
-            chan2 = AnalogIn(ads, ADS.P2)
-            chan3 = AnalogIn(ads, ADS.P3)
 
-            chan_dark[0] = chan1.value
-            chan_ref_dark = chan2.value
-            chan_dark[1] = chan3.value
+            chan_dark[0] = chan0.value
+            ref_dark = chanref.value
+            chan_dark[1] = chan1.value
 
             
             
@@ -521,80 +535,84 @@ class ShowcaseApp(App):
             self.leds.show()
             time.sleep(delay_time) #delay
             
-            for i in range(10):
-                chan_read[0] = chan1.value
-                chan_ref = chan2.value
-                chan_read[1] = chan3.value
+            for i in range(s_times):
+                chan_light[0] = chan0.value
+                ref_light = chanref.value
+                chan_light[1] = chan1.value
 
-                if chan0min > chan_read[0]:
-                    chan0min = chan_read[0]
-                if chan0max < chan_read[0]:
-                    chan0max = chan_read[0]
+                if chan0min > chan_light[0]:
+                    chan0min = chan_light[0]
+                if chan0max < chan_light[0]:
+                    chan0max = chan_light[0]
                   
-                if refmin > chan_ref:
-                    refmin = chan_ref
-                if refmax < chan_ref:
-                    refmax = chan_ref
+                if refmin > ref_light:
+                    refmin = ref_light
+                if refmax < ref_light:
+                    refmax = ref_light
                         
-                if chan1min > chan_read[1]:
-                    chan1min = chan_read[1]
-                if chan1max < chan_read[1]:
-                    chan1max = chan_read[1]    
+                if chan1min > chan_light[1]:
+                    chan1min = chan_light[1]
+                if chan1max < chan_light[1]:
+                    chan1max = chan_light[1]    
                 
-                chan_sum[0] = chan_sum[0] + chan_read[0]
-                chan_sum[1] = chan_sum[1] + chan_ref
-                chan_sum[2] = chan_sum[2] + chan_read[1]
-
+                chan_sum[0] = chan_sum[0] + chan_light[0]
+                chan_sum[1] = chan_sum[1] + chan_light[1]
+                ref_sum = ref_sum + ref_light
                 
-                print(str(chan_read[1]) + " " + str(chan_ref) + " " + str(chan_read[0]))
+                print(str(chan_dark[0]) + " " + str(chan_light[0]) + " " + \
+                      str(chan_dark[1]) + " " + str(chan_light[1]) + " " + \
+                      str(ref_dark) + " " + str(ref_light))
+                
                 if self.f_record:
-                    flo_record.write(str(chan_read[1]) + " " + str(chan_ref) + " " + str(chan_read[0]) + "\n")                
+                    flo_record.write(str(chan_dark[0]) +" "+str(chan_light[0]) +" "+ \
+                                     str(chan_dark[1]) +" "+str(chan_light[1]) +" "+ \
+                                     str(ref_dark) + " " + str(ref_light) + "\n")                
 
-                pro_bar += 10
+                pro_bar += 100/s_times
                 self.pop_up.set_bar(pro_bar)
 
             self.leds[1] = (0, 0, 0) #led off
             self.leds.show()    
 
             
-            chan_result[0] = chan_sum[0]/10 - chan_dark[0] 
-            chan_result[1] = chan_sum[1]/10 - chan_ref_dark
-            chan_result[2] = chan_sum[2]/10 - chan_dark[1]
+            chan_result[0] = chan_sum[0]/s_times - chan_dark[0] 
+            chan_result[1] = chan_sum[1]/s_times - chan_dark[1]
+            ref_result = ref_sum/s_times - ref_dark
             
             #show result
             chan_result[0] = round(chan_result[0], 1)
             chan_result[1] = round(chan_result[1], 1)
-            chan_result[2] = round(chan_result[2], 1)
+            ref_result = round(ref_result, 1)
             
             print("result led no blink: ")
-            print('Dark: ' + str(chan_dark[1]) + " " + str(chan_ref_dark) + " " + str(chan_dark[0]))
-            print('Aver: ' + str(chan_sum[2]/10)+ " " +str(chan_sum[1]/10) + " " +str(chan_sum[0]/10))
-            print('Sub: ' + str(chan_result[2])+ " " +str(chan_result[1]) + " " +str(chan_result[0]))
+            print('Dark: ' + str(chan_dark[0]) + " " + str(chan_dark[1]) + " " + str(ref_dark))
+            print('Aver: ' + str(chan_sum[0]/s_times)+ " " +str(chan_sum[1]/s_times) + " " +str(ref_sum/s_times))
+            print('Sub: ' + str(chan_result[0])+ " " +str(chan_result[1]) + " " +str(ref_result))
             print('------------------------')
 
             if self.f_record:
                 flo_record.write("result led no blink: \n")
-                flo_record.write('Dark: ' + str(chan_dark[1]) +" "+str(chan_ref_dark) +" "+ str(chan_dark[0]) + "\n")
-                flo_record.write('Aver: ' + str(chan_sum[2]/10)+ " " +str(chan_sum[1]/10) + " " +str(chan_sum[0]/10) + "\n")
-                flo_record.write('Sub: ' + str(chan_result[2])+ " " +str(chan_result[1]) + " " +str(chan_result[0]) + "\n")
+                flo_record.write('Dark: ' + str(chan_dark[0]) + " " + str(chan_dark[1]) + " " + str(ref_dark) + "\n")
+                flo_record.write('Aver: ' + str(chan_sum[0]/s_times)+ " " +str(chan_sum[1]/s_times) + " " +str(ref_sum/s_times) + "\n")
+                flo_record.write('Sub: ' + str(chan_result[0])+ " " +str(chan_result[1]) + " " +str(ref_result) + "\n")
                 flo_record.write('---------------------------------------------------------------------------------------------------------------------------\n')
                 
-            self.flo_read[0] = str(chan_result[2])
-            self.flo_read[1] = str(chan_result[1])
-            self.flo_read[2] = str(chan_result[0])
+            self.flo_read[0] = str(chan_result[0])
+            self.flo_read[1] = str(ref_result)
+            self.flo_read[2] = str(chan_result[1])
 
-            gap[0] = chan0max - chan0min
-            gap[1] = refmax - refmin
-            gap[2] = chan1max - chan1min
+            chan_gap[0] = chan0max - chan0min
+            chan_gap[1] = chan1max - chan1min
+            ref_gap = refmax - refmin
             
             print('Gap:')
-            print('Max: ' + str(chan1max) + " " +str(refmax) + " " + str(chan0max))
-            print('Min: ' + str(chan1min) + " " +str(refmin) + " " + str(chan0min))
-            print('Result: ' + str(gap[2]) + " " +str(gap[1]) + " " + str(gap[0]))
+            print('Max: ' + str(chan0max) + " " + str(chan1max) + " " + str(refmax))
+            print('Min: ' + str(chan0min) + " " + str(chan1min) + " " + str(refmin))
+            print('Result: ' + str(chan_gap[0]) + " " +str(chan_gap[1]) + " " + str(ref_gap))
             print('------------------------------------------------------------------------------')
-            self.gap_read[0] = str(gap[2])
-            self.gap_read[1] = str(gap[1])
-            self.gap_read[2] = str(gap[0])
+            self.gap_read[0] = str(chan_gap[0])
+            self.gap_read[1] = str(ref_gap)
+            self.gap_read[2] = str(chan_gap[1])
             
             self.pop_up.dismiss()
             
@@ -602,102 +620,6 @@ class ShowcaseApp(App):
             self.pop_up.dismiss()
             print('ADC average led no blink failed')
     
-    """ 
-    def adc_aver_with_blink_thread(self):
-        try:
-            pro_bar = 0
-            gain_input = float(self.adc_gain)
-            sample_rate_input = float(self.sample_rate)
-            ads = ADS.ADS1115(self.i2c,gain=gain_input , data_rate=sample_rate_input, address=0x48)
-            chan1sum = 0
-            chan2sum = 0
-            chan3sum = 0
-            chan1 = AnalogIn(ads, ADS.P1)
-            chan2 = AnalogIn(ads, ADS.P2)
-            chan3 = AnalogIn(ads, ADS.P3)
-           
-            for i in range(10):
-                self.leds[1] = (65535, 65535, 65535)
-                self.leds.show()
-                #time.sleep(0.1)
-                chan1read = chan1.value
-                chan2read = chan2.value
-                chan3read = chan3.value
-                chan1sum = chan1sum + chan1read
-                chan2sum = chan2sum + chan2read
-                chan3sum = chan3sum + chan3read
-                print(str(chan3read) +" "+str(chan2read) +" "+ str(chan1read))
-                self.leds[1] = (0, 0, 0)
-                self.leds.show()
-                #time.sleep(0.1)
-                pro_bar += 10
-                self.pop_up.set_bar(pro_bar)
-            print("result blink: ")
-            print(str(chan3sum/10)+" "+str(chan2sum/10)+" "+str(chan1sum/10))
-            self.flo_read[0] = str(chan3sum/10)
-            self.flo_read[1] = str(chan2sum/10)
-            self.flo_read[2] = str(chan1sum/10)
-            self.pop_up.dismiss()
-        except:
-            self.pop_up.dismiss()
-            print('ADC average blink failed')
-           
-    def adc_aver_with_blink_sub_thread(self):
-        try:
-            pro_bar = 0
-            gain_input = float(self.adc_gain)
-            sample_rate_input = float(self.sample_rate)
-            ads = ADS.ADS1115(self.i2c,gain=gain_input , data_rate=sample_rate_input, address=0x48)
-            chan1sum = 0
-            chan2sum = 0
-            chan3sum = 0
-            chan1 = AnalogIn(ads, ADS.P1)
-            chan2 = AnalogIn(ads, ADS.P2)
-            chan3 = AnalogIn(ads, ADS.P3)
-            print('')
-            for i in range(10):
-                chan1read = chan1.value
-                chan2read = chan2.value
-                chan3read = chan3.value
-                print(str(chan3read) +" "+str(chan2read) +" "+ str(chan1read))
-                self.leds[1] = (65535, 65535, 65535)
-                self.leds.show()
-                #time.sleep(0.1)
-
-                #chan1read = chan1.value - chan1read
-                #chan2read = chan2.value - chan2read
-                #chan3read = chan3.value - chan3read
-                chan1read2 = chan1.value
-                chan2read2 = chan2.value
-                chan3read2 = chan3.value
-                print(str(chan3read2) +" "+str(chan2read2) +" "+ str(chan1read2))
-
-                chan1read = chan1read2 - chan1read
-                chan2read = chan2read2 - chan2read
-                chan3read = chan3read2 - chan3read
-                
-                chan1sum = chan1sum + chan1read
-                chan2sum = chan2sum + chan2read
-                chan3sum = chan3sum + chan3read
-
-                print(str(chan3read) +" "+str(chan2read) +" "+ str(chan1read))
-                print('------------------------')
-                self.leds[1] = (0, 0, 0)
-                self.leds.show()
-                #time.sleep(0.1)
-                pro_bar += 10
-                self.pop_up.set_bar(pro_bar)
-            print("result blink: ")
-            print(str(chan3sum/10)+" "+str(chan2sum/10)+" "+str(chan1sum/10))
-            self.flo_read[0] = str(chan3sum/10)
-            self.flo_read[1] = str(chan2sum/10)
-            self.flo_read[2] = str(chan1sum/10)
-            self.pop_up.dismiss()
-        except:
-            self.pop_up.dismiss()
-            print('ADC average blink failed')
-    """        
-
 
     def adc_aver_with_blink_sub_gaincontrol_thread(self):
         gainrange = [1, 2, 4, 8, 16]
@@ -707,28 +629,30 @@ class ShowcaseApp(App):
         refmax = 0 
         chan1min = 32767
         chan1max = 0
-        chansum = [0, 0, 0]
-        gap = [0, 0, 0]
-        
-        chanread = [0, 0]
-        chanread2 = [0, 0]
 
+        
+        chan_gap = [0, 0]
+        chan_dark = [0, 0]
+        chan_light = [0, 0]
+        chan_sub = [0, 0]
+        chan_result = [0, 0]
+        chan_sum = [0, 0]
+        ref_sum = 0
+        
         delay_time = float(self.flo_delay_time)
         gain_input = float(self.adc_gain)
         sample_rate_input = float(self.sample_rate)
         self.leds._bcr = int(self.led_current)
-        #ads = ADS.ADS1115(self.i2c,gain=1 , data_rate=8, address=0x48)
-        #self.leds._bcr = 64
-        #print(ads.mode)
+        s_times = int(self.sample_times)
         
         if self.f_record:
             flo_record = open(self.name, "a")
         try:
             pro_bar = 0
             ads = ADS.ADS1115(self.i2c,gain=gain_input , data_rate=sample_rate_input, address=0x48)
+            chan0 = AnalogIn(ads, ADS.P3)
+            chanref = AnalogIn(ads, ADS.P2)
             chan1 = AnalogIn(ads, ADS.P1)
-            chan2 = AnalogIn(ads, ADS.P2)
-            chan3 = AnalogIn(ads, ADS.P3)
             
             #--------------------------first read------------------
             for ap in gainrange:
@@ -737,28 +661,27 @@ class ShowcaseApp(App):
                 print('')
                 print("-----------start over with amplify [" + str(ap) + "] gain [" + str(gain_input) + "]--------------")
                 print("-----------delay time [" + str(delay_time) + "] current [" + str(self.leds._bcr) + "] ------------\n")
-                print(delay_time)
+                
                 if self.f_record:
                     flo_record.write('\n')
                     flo_record.write('\n')
                     flo_record.write('Blink test\n')
                     flo_record.write("-----------start over with amplify [" + str(ap) + "] gain [" + str(gain_input) + "]--------------\n")
                     flo_record.write("-----------delay time [" + str(delay_time) + "] current [" + str(self.leds._bcr) + "] ------------\n")
-                chanread[0] = chan1.value
-                refread = chan2.value
-                chanread[1] = chan3.value
-                print(str(chanread[1]) +" "+str(refread) +" "+ str(chanread[0]))
-                if self.f_record:
-                    flo_record.write(str(chanread[1]) +" "+str(refread) +" "+ str(chanread[0]) +"\n")
+                    
+                chan_dark[0] = chan0.value
+                ref_dark = chanref.value
+                chan_dark[1] = chan1.value
+                    
                 self.leds[1] = (65535, 65535, 65535)
                 self.leds.show() #led first on
                 time.sleep(delay_time) #delay
 
-                chanread2[0] = chan1.value
-                refread2 = chan2.value
-                chanread2[1] = chan3.value
+                chan_light[0] = chan0.value
+                ref_light = chanref.value
+                chan_light[1] = chan1.value
 
-                for read in chanread2:
+                for read in chan_light:
                     if (read > 25000):
                         print("-------reach max, reducing gain-------")
                         if self.f_record:
@@ -777,9 +700,9 @@ class ShowcaseApp(App):
                         self.leds.show() #led reset off
                         time.sleep(delay_time) #delay
                         ads = ADS.ADS1115(self.i2c, gain=gain_input , data_rate=sample_rate_input, address=0x48)
+                        chan0 = AnalogIn(ads, ADS.P3)
+                        chanref = AnalogIn(ads, ADS.P2)
                         chan1 = AnalogIn(ads, ADS.P1)
-                        chan2 = AnalogIn(ads, ADS.P2)
-                        chan3 = AnalogIn(ads, ADS.P3)
                         pass_flag = False
                         break
 
@@ -787,128 +710,147 @@ class ShowcaseApp(App):
                     break
 
             
-            print(str(chanread2[1]) +" "+str(refread2) +" "+ str(chanread2[0]))
-            if self.f_record:
-                flo_record.write(str(chanread2[1]) +" "+str(refread2) +" "+ str(chanread2[0]) +"\n")
-            chanread[0] = (chanread2[0] - chanread[0]) * ap
-            refread = (refread2 - refread) * ap
-            chanread[1] = (chanread2[1] - chanread[1]) * ap
+            
+            chan_sub[0] = (chan_light[0] - chan_dark[0]) * ap
+            chan_sub[1] = (chan_light[1] - chan_dark[1]) * ap
+            ref_sub = (ref_light - ref_dark) * ap
+            
+            if chan0min > chan_sub[0]:
+                chan0min = chan_sub[0]
+            if chan0max < chan_sub[0]:
+                chan0max = chan_sub[0]
+                
+                    
+            if chan1min > chan_sub[1]:
+                chan1min = chan_sub[1]
+            if chan1max < chan_sub[1]:
+                chan1max = chan_sub[1]
 
-            if chan0min > chanread[0]:
-                chan0min = chanread[0]
-            if chan0max < chanread[0]:
-                chan0max = chanread[0]
-                    
-            if refmin > refread:
-                refmin = refread
-            if refmax < refread:
-                refmax = refread
-                    
-            if chan1min > chanread[1]:
-                chan1min = chanread[1]
-            if chan1max < chanread[1]:
-                chan1max = chanread[1]    
+            if refmin > ref_sub:
+                refmin = ref_sub
+            if refmax < ref_sub:
+                refmax = ref_sub    
             
-            chansum[0] = chansum[0] + chanread[0]
-            chansum[1] = chansum[1] + refread
-            chansum[2] = chansum[2] + chanread[1]
+            chan_sum[0] = chan_sum[0] + chan_sub[0]
+            chan_sum[1] = chan_sum[1] + chan_sub[1]
+            ref_sum = ref_sum + ref_sub
+       
+            print(str(chan_dark[0]) +" "+str(chan_light[0]) +" "+ str(chan_sub[0]) + "  " + \
+                  str(chan_dark[1]) +" "+str(chan_light[1]) +" "+ str(chan_sub[1]) + "  " + \
+                  str(ref_dark) + " " + str(ref_light) + " " + str(ref_sub))
             
-            print(str(chanread[1]) +" "+str(refread) +" "+ str(chanread[0]))
-            print('------------------------')
             if self.f_record:
-                flo_record.write(str(chanread[1]) +" "+str(refread) +" "+ str(chanread[0]) + "\n")
-                flo_record.write('------------------------\n')
+                flo_record.write(str(chan_dark[0]) +" "+str(chan_light[0]) +" "+ str(chan_sub[0]) + "  " + \
+                                 str(chan_dark[1]) +" "+str(chan_light[1]) +" "+ str(chan_sub[1]) + "  " + \
+                                 str(ref_dark) + " " + str(ref_light) + " " + str(ref_sub) + "\n")
+
+                
             self.leds[1] = (0, 0, 0)
             self.leds.show() #led first off
+            pro_bar += 100/s_times
+            self.pop_up.set_bar(pro_bar)
             time.sleep(delay_time) #delay
-            pro_bar += 10
+            
             
             #-------------------------read else 9----------------------
-            for i in range(9):
-                chanread[0] = chan1.value
-                refread = chan2.value
-                chanread[1] = chan3.value
-                print(str(chanread[1]) +" "+str(refread) +" "+ str(chanread[0]))
-                if self.f_record:
-                    flo_record.write(str(chanread[1]) +" "+str(refread) +" "+ str(chanread[0]) + "\n")
+            for i in range(s_times - 1):
+                chan_dark[0] = chan0.value
+                ref_dark = chanref.value
+                chan_dark[1] = chan1.value
+             
                 self.leds[1] = (65535, 65535, 65535)
                 self.leds.show() #led loop on
                 time.sleep(delay_time) #delay
 
-                chanread2[0] = chan1.value
-                refread2 = chan2.value
-                chanread2[1] = chan3.value
+                chan_light[0] = chan0.value
+                ref_light = chanref.value
+                chan_light[1] = chan1.value
         
-                print(str(chanread2[1]) +" "+str(refread2) +" "+ str(chanread2[0]))
+                chan_sub[0] = (chan_light[0] - chan_dark[0]) * ap
+                ref_sub = (ref_light - ref_dark) * ap
+                chan_sub[1] = (chan_light[1] - chan_dark[1]) * ap
 
-                chanread[0] = (chanread2[0] - chanread[0]) * ap
-                refread = (refread2 - refread) * ap
-                chanread[1] = (chanread2[1] - chanread[1]) * ap
+                if chan0min > chan_sub[0]:
+                    chan0min = chan_sub[0]
+                if chan0max < chan_sub[0]:
+                    chan0max = chan_sub[0]
+                    
+                    
+                if chan1min > chan_sub[1]:
+                    chan1min = chan_sub[1]
+                if chan1max < chan_sub[1]:
+                    chan1max = chan_sub[1]
 
-                if chan0min > chanread[0]:
-                    chan0min = chanread[0]
-                elif chan0max < chanread[0]:
-                    chan0max = chanread[0]
-                    
-                if refmin > refread:
-                    refmin = refread
-                elif refmax < refread:
-                    refmax = refread
-                    
-                if chan1min > chanread[1]:
-                    chan1min = chanread[1]
-                elif chan1max < chanread[1]:
-                    chan1max = chanread[1]
-                    
-                chansum[0] = chansum[0] + chanread[0]
-                chansum[1] = chansum[1] + refread
-                chansum[2] = chansum[2] + chanread[1]
+                if refmin > ref_sub:
+                    refmin = ref_sub
+                if refmax < ref_sub:
+                    refmax = ref_sub
+                        
+                chan_sum[0] = chan_sum[0] + chan_sub[0]
+                ref_sum = ref_sum + ref_sub
+                chan_sum[1] = chan_sum[1] + chan_sub[1]
 
-                print(str(chanread[1]) +" "+str(refread) +" "+ str(chanread[0]))
-                print('------------------------')
+                print(str(chan_dark[0]) +" "+str(chan_light[0]) +" "+ str(chan_sub[0]) + "  " + \
+                  str(chan_dark[1]) +" "+str(chan_light[1]) +" "+ str(chan_sub[1]) + "  " + \
+                  str(ref_dark) + " " + str(ref_light) + " " + str(ref_sub))
+                
+                
                 if self.f_record:
-                    flo_record.write(str(chanread2[1]) +" "+str(refread2) +" "+ str(chanread2[0]) + "\n")
-                    flo_record.write(str(chanread[1]) +" "+str(refread) +" "+ str(chanread[0]) + "\n")
-                    flo_record.write('------------------------\n')
+                    flo_record.write(str(chan_dark[0]) +" "+str(chan_light[0]) +" "+ str(chan_sub[0]) + "  " + \
+                                     str(chan_dark[1]) +" "+str(chan_light[1]) +" "+ str(chan_sub[1]) + "  " + \
+                                     str(ref_dark) + " " + str(ref_light) + " " + str(ref_sub) + "\n")
+                    
                 self.leds[1] = (0, 0, 0)
                 self.leds.show() #led loop off
                 time.sleep(delay_time) #delay
-                pro_bar += 10
+                pro_bar += 100/s_times
                 self.pop_up.set_bar(pro_bar)
                 
             print("result blink sub with gain control: ")
-            print(str(chansum[2]/10)+" "+str(chansum[1]/10)+" "+str(chansum[0]/10))
+            
+            chan_result[0] = chan_sum[0]/s_times
+            chan_result[1] = chan_sum[1]/s_times
+            ref_result = ref_sum/s_times
+            
+            chan_result[0] = round(chan_result[0], 1)
+            chan_result[1] = round(chan_result[1], 1)
+            ref_result = round(ref_result, 1)
+            
+            print(str(chan_result[0])+ " " +str(chan_result[1]) + " " + str(ref_result))
+            
             if self.f_record:
                 flo_record.write("result blink sub with gain control: \n")
-                flo_record.write(str(chansum[2]/10)+" "+str(chansum[1]/10)+" "+str(chansum[0]/10) + "\n")
+                flo_record.write(str(chan_result[0])+ " " +str(chan_result[1]) + " " + str(ref_result) + "\n")
                 flo_record.write('---------------------------------------------------------------------------------------------------------------------------\n')
-            self.flo_read[0] = str(chansum[2]/10)
-            self.flo_read[1] = str(chansum[1]/10)
-            self.flo_read[2] = str(chansum[0]/10)
 
-            gap[0] = chan0max - chan0min
-            gap[1] = refmax - refmin
-            gap[2] = chan1max - chan1min
+            self.flo_read[0] = str(chan_result[0])
+            self.flo_read[1] = str(ref_result)
+            self.flo_read[2] = str(chan_result[1])
+
+            chan_gap[0] = chan0max - chan0min
+            ref_gap = refmax - refmin
+            chan_gap[1] = chan1max - chan1min
             
             print('Gap:')
-            print('Max: ' + str(chan1max)+" "+str(refmax)+" "+str(chan0max))
-            print('Min: ' + str(chan1min)+" "+str(refmin)+" "+str(chan0min))
-            print('Result: ' + str(gap[2])+" "+str(gap[1])+" "+str(gap[0]))
+            print('Max: ' + str(chan0max) + " " + str(chan1max) + " " + str(refmax))
+            print('Min: ' + str(chan0min) + " " + str(chan1min) + " " + str(refmin))
+            print('Result: ' + str(chan_gap[0]) + " " +str(chan_gap[1]) + " " + str(ref_gap))
             print('------------------------------------------------------------------------------')
-            self.gap_read[0] = str(gap[2])
-            self.gap_read[1] = str(gap[1])
-            self.gap_read[2] = str(gap[0])
+            self.gap_read[0] = str(chan_gap[0])
+            self.gap_read[1] = str(ref_gap)
+            self.gap_read[2] = str(chan_gap[1])
             
             ads = ADS.ADS1115(self.i2c,gain=float(self.adc_gain) , data_rate=sample_rate_input, address=0x48)
             if self.f_record:
                 flo_record.close()
             self.pop_up.dismiss()
+        
         except:
             self.pop_up.dismiss()
             if self.f_record:
                 flo_record.write('ADC average blink sub with gain control failed\n')
             print('ADC average blink sub with gain control failed')
-
+        
             
     def read_led_current_thread(self):
         try:

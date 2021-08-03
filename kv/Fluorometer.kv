@@ -29,11 +29,11 @@ ShowcaseScreen:
 				font_size:30
 				color:0, 0, 0, 1 
 			Label:
-				text:'Ref'
+				text:'Ch2'
 				font_size:30
 				color:0, 0, 0, 1 
 			Label:
-				text:'Ch2'
+				text:'Ref'
 				font_size:30
 				color:0, 0, 0, 1 
 			Label:
@@ -46,12 +46,12 @@ ShowcaseScreen:
 				color:0, 0, 0, 1 
 				
 			Label:
-				text:'{}'.format(app.flo_read[1])
+				text:'{}'.format(app.flo_read[2])
 				font_size:20
 				color:0, 0, 0, 1 
 				
 			Label:
-				text:'{}'.format(app.flo_read[2])
+				text:'{}'.format(app.flo_read[1])
 				font_size:20	
 				color:0, 0, 0, 1 		
 			
@@ -64,11 +64,11 @@ ShowcaseScreen:
 				font_size:20
 				color:0, 0, 0, 1 
 			Label:
-				text:'{}'.format(app.gap_read[1])
+				text:'{}'.format(app.gap_read[2])
 				font_size:20
 				color:0, 0, 0, 1 
 			Label:
-				text:'{}'.format(app.gap_read[2])
+				text:'{}'.format(app.gap_read[1])
 				font_size:20
 				color:0, 0, 0, 1 
 					
@@ -121,7 +121,7 @@ ShowcaseScreen:
 				
 		GridLayout:		
 			spacing:30
-			rows:3
+			rows:4
 			cols:3
 			size_hint_y:0.3
 			Label:
@@ -177,6 +177,19 @@ ShowcaseScreen:
 					elif s_sample_rate.text == "475": app.sample_rate = '475'
 					elif s_sample_rate.text == "860": app.sample_rate = '860'
 					
+			Label:
+				text:'delay time'
+				color:'FF8000'
+				font_size:18	
+			Label:
+				text:'current'
+				color:'FF8000'
+				font_size:18 			
+			Label:
+				text:'sample times'
+				color:'FF8000'
+				font_size:18		
+				
 			Spinner:
 				id:s_delay_time
 				background_normal: ''
@@ -200,3 +213,15 @@ ShowcaseScreen:
 					elif s_led_current.text == "64": app.led_current = '64'
 					elif s_led_current.text == "32": app.led_current = '32'
 					elif s_led_current.text == "16": app.led_current = '16'
+					
+			Spinner:
+				id:s_sample_times
+				background_normal: ''
+				background_color: '#c40e25'
+				text: '5'
+				values: ('3', '5', '10')
+				on_text: 
+					if s_sample_times.text == "3": app.sample_times = '3'
+					elif s_sample_times.text == "5": app.sample_times = '5'
+					elif s_sample_times.text == "10": app.sample_times = '10'
+					

@@ -10,19 +10,23 @@ ShowcaseScreen:
 			Label:
 				text:"Please insert standard 1"
 				font_size:36	
-			
+				color:0, 0, 0, 1 
 		BoxLayout:	
 			size_hint:1,0.2
-			spacing:40
-			orientation: "horizontal"
+			spacing:20
+			orientation: "vertical"
 			Button:
 				text:"Cancel"
-				font_size:30
+				font_size:20
+				background_normal: ''
+				background_color: '#c40e25'
 				on_release:app.go_previous()
 				
 			Button:
 				text:"Read Standard 1"
-				font_size:30
+				font_size:20
+				background_normal: ''
+				background_color: '#c40e25'
 				on_release:app.read_standard_1()
 			
 		

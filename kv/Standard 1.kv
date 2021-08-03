@@ -10,6 +10,7 @@ ShowcaseScreen:
 			Label:
 				text:"Please insert standard 2"
 				font_size:36	
+				color:0, 0, 0, 1 
 		Graph:
 			id: plot_dna
 			size_hint_x:.6
@@ -35,12 +36,16 @@ ShowcaseScreen:
 			orientation: "horizontal"
 			Button:
 				text:"Cancel"
-				font_size:30
+				font_size:20
+				background_normal: ''
+				background_color: '#c40e25'
 				on_release:app.go_previous()
 				
 			Button:
 				text:"Read Standard 2"
-				font_size:30
+				font_size:20
+				background_normal: ''
+				background_color: '#c40e25'
 				on_release:app.read_standard_2()
 			
 		
