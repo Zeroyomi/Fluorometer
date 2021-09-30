@@ -1,0 +1,117 @@
+
+#:import Factory kivy.factory.Factory
+
+<ShowcaseScreen>:
+	
+    ScrollView:
+        do_scroll_x: False
+        do_scroll_y: False 
+        AnchorLayout:
+            size_hint_y: None
+            height: root.height 
+            GridLayout:
+                id: content
+                cols: 1
+                spacing: '8dp'
+                padding: '8dp'
+                size_hint: (1, 1) 
+                height: self.height 
+
+
+	
+BoxLayout:
+    orientation: 'vertical'
+
+    canvas.before:
+        Color:
+            #rgb: .6, .6, .6
+        Rectangle:
+            size: self.size
+            source: './images/background_w.png'
+	
+	FloatLayout:
+		size_hint:(1,0.08)
+        height: 64
+		
+		
+		
+		Label:
+			id:main_label
+			pos:(0, root.height - self.height)
+			text:"Choose an assay"
+			#color:'#ffffff'
+			#size_hint: (1, 0.4)
+			font_size:40
+			background_color:(255,255,255,1)
+			
+			#canvas.before:
+				#Color:
+					#rgba:self.background_color
+				#Rectangle:
+					#size: self.size
+					#pos: self.pos
+				#Line:
+					#width: 5
+					#rectangle: self.x - 10, self.y, self.width + 20, self.height
+		Button:
+			id:back_btn
+			disabled:False
+			background_disabled_normal: './images/back_disable.png'
+			background_normal:'./images/back.png' 
+			background_down:'./images/back.png' 
+			pos:(0, root.height - self.height)
+			size_hint: (None, None)
+			size:64,64
+			
+			on_release:app.go_previous()
+   
+
+    ScreenManager:
+		size_hint:(1,0.8)
+        id: sm
+        #on_current_screen:
+            
+	GridLayout:
+		cols:2
+		size_hint:(1,0.1)
+		
+		Button:
+			
+			id:home
+			
+			text:"Menu"
+			font_size:36
+			background_normal: ''
+			background_color: '#c40e25'
+			on_release:app.go_home()
+		Button:
+			
+			id:set
+			text:"Settings"
+			font_size:36
+			background_normal: ''
+			background_color: '#c40e25'
+			on_release:app.go_settings()
+			
+<PopupBox>:
+    pop_up_text: _pop_up_text
+	reading_progress_bar: _reading_progress_bar
+    size_hint: 1, 1
+    auto_dismiss: True
+    title: 'Reading'   
+
+    BoxLayout:
+        orientation: "vertical"
+        Label:
+			size_hint_y:.5
+            id: _pop_up_text
+			font_size:36
+            text: ''	
+		ProgressBar:
+			pos_hint:{'x':.1}
+			size_hint_y:.5
+			size_hint_x:.8
+			id:_reading_progress_bar
+			value:0
+			min:0
+			max:100

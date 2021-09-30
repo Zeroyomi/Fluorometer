@@ -23,8 +23,12 @@ ShowcaseScreen:
 				height:self.width
 				background_normal:'./images/DNA.png'
 				background_down:'./images/DNA_press.png'   
-				on_release:app.go_screen('Read Standard DNA')
-				trigger_action:0.01
+				#on_release:app.go_screen('Read Standard DNA')
+				#trigger_action:0
+				on_press:
+					app.go_screen('Read Standard DNA')
+					app.load_DNA()
+				min_state_time:0.1
 			#HomeButton:
 				#background_normal:'./images/fluorometer.png'
 				#background_down:'./images/fluorometer_press.png'
@@ -33,8 +37,12 @@ ShowcaseScreen:
 			HomeButton:
 				background_normal:'./images/fluorometer.png'
 				background_down:'./images/fluorometer_press.png'
-				on_release:app.go_screen('Fluorometer')
-				trigger_action:0.01
+				#on_release:app.go_screen('Fluorometer')
+				#trigger_action:0
+				on_press:
+					app.go_screen('Fluorometer')
+					app.load_fluorometer()
+				min_state_time:0.1
 				
 			HomeButton:
 				background_normal:'./images/button.png'
@@ -57,7 +65,8 @@ ShowcaseScreen:
 				background_down:'./images/button_press.png'
 				
 		GridLayout:
-			
+		
+
 
         
 					

@@ -5,7 +5,6 @@ import os
 import time,threading
 import configparser
 
-from pathlib import Path
 
 from kivy.app import App
 
@@ -14,8 +13,7 @@ from kivy.properties import NumericProperty, StringProperty, BooleanProperty,\
     ListProperty, ObjectProperty
 from kivy.clock import Clock
 
-from kivy.uix.screenmanager import Screen, ScreenManager
-from kivy.uix.label import Label
+from kivy.uix.screenmanager import Screen
 from kivy.core.window import Window
 
 #for popup
@@ -37,13 +35,6 @@ class PopupBox(Popup):
     def set_bar(self, value):
         self.reading_progress_bar.value = value
 
-
-class WindowManager(ScreenManager):
-    pass
-
-class MainScreen(Screen):
-    pass
-
 class ShowcaseScreen(Screen):
     #fullscreen = BooleanProperty(False)
    
@@ -64,16 +55,7 @@ class Exportdata(Screen):
     def selected(self, filename):
         print(filename)
         
-    def delete(self, filename):
-        try:
-            os.remove(filename[0])
-        except:
-            print('error when delete')
-            
-class DataRead(Screen):
-    pass
-        
-class FluorometerApp(App):
+class ShowcaseApp(App):
     #kivy properties
     brightness = StringProperty()
     flo_read = ListProperty([0,0,0])
@@ -86,9 +68,7 @@ class FluorometerApp(App):
     flo_delay_time = StringProperty()
     led_current = StringProperty()
     sample_times = StringProperty()
-    clock_time = StringProperty(0)
     
-    data_read_content = StringProperty()
     record_name = StringProperty('not record')
     #config
     config = configparser.ConfigParser()
@@ -103,29 +83,11 @@ class FluorometerApp(App):
     led_current = '127'
     sample_times = '5'
     #unit = NumericProperty(1)
-    main_screen = Builder.load_file('kv/main.kv')
     home_screen = Builder.load_file("./kv/home.kv")
     setting_screen = Builder.load_file("./kv/settings.kv")
-    #data_screen = Builder.load_file("./kv/Export_data.kv")
+    
     f_record = False
-    
-    path_dir = "/home/pi/Fluorometer/Records/"
-
-    
-    
-    # Directory
-    #directory ='Fluorometer ' + str(time.strftime("%Y_%m_%d",t))  
-    # Parent Directory path
-    #parent_dir = "/home/pi/Fluorometer/Records/"
-      
-    # Path
-    #path = os.path.join(parent_dir, directory)
-      
-    # Create the directory
-    #os.mkdir(path)
-    
-    
-    
+    name = ''
     try:
         spi = busio.SPI(board.SCK, MOSI=board.MOSI)
         
@@ -136,10 +98,10 @@ class FluorometerApp(App):
         leds[0] = (0, 0, 0)
         leds[1] = (0, 0, 0)
         leds.show()
-        #print('blue bc:')
-        #print(leds._bcb)
-        #print('red bc')
-        #print(leds._bcr)
+        print('blue bc:')
+        print(leds._bcb)
+        print('red bc')
+        print(leds._bcr)
     except:
         print('>>>>>>>>>>>>>>>led init failed<<<<<<<<<<<<<<<<<<<')
 
@@ -158,35 +120,19 @@ class FluorometerApp(App):
         file.close()
     except:
         print('>>>>>>>>>>>>>>>Brightness init error<<<<<<<<<<<<<<<<<<<<<<<')
-        
-
-        
+    
     def build(self):
-        
-        self.root = self.main_screen
+        self.root = Builder.load_file('kv/main.kv')
         self.title = 'Fluorometer'
         Window.size = (480, 800)
         
         #self.go_home()
         self.hierarchy_index.append('home')
         print(self.hierarchy_index)
-        #print(self.root)
-        #print(self.root.get_screen('mainscreen').ids)
-        self.root.get_screen('mainscreen').ids.sm.switch_to(self.home_screen, direction='right')
         #screen = Builder.load_file("./kv/home.kv")
-        #self.ids.sm.current = 'Home'
-        #self.root.ids.sm.switch_to(self.home_screen, direction='right')
-        #self.root.ids.main_label.text = 'Choose an assay'
-        #self.root.ids.back_btn.disabled=True
-        
-        #app_clock = App_clock()
-        Clock.schedule_interval(self.clock_update, 1)
-        #return app_clock
-        
-    def clock_update(self, *args):
-        self.root.get_screen('mainscreen').ids.app_clock.text = time.strftime('%Y'+'/'+'%m'+'/'+'%d'+' %H'+':'+'%M')
-        #self.clock_time = time.strftime('%I'+':'+'%M'+' %p')
-        #print(self.text)
+        self.root.ids.sm.switch_to(self.home_screen, direction='right')
+        self.root.ids.main_label.text = 'Choose an assay'
+        self.root.ids.back_btn.disabled=True
         
     def go_home(self):
 
@@ -196,25 +142,21 @@ class FluorometerApp(App):
         self.hierarchy_index.append('home')
         print(self.hierarchy_index)
         #screen = Builder.load_file("./kv/home.kv")
-        self.root.get_screen('mainscreen').ids.sm.switch_to(self.home_screen, direction='right')
-        self.root.get_screen('mainscreen').ids.main_label.text = 'Choose an assay'
-        self.root.get_screen('mainscreen').ids.back_btn.disabled=True
+        self.root.ids.sm.switch_to(self.home_screen, direction='right')
+        self.root.ids.main_label.text = 'Choose an assay'
+        self.root.ids.back_btn.disabled=True
 
     def go_settings(self):
-        #if (len(self.hierarchy_index) == 1) and (self.hierarchy_index[0] == 'settings'):
-        if (self.hierarchy_index[-1] == 'settings'):    
+        if (len(self.hierarchy_index) == 1) and (self.hierarchy_index[0] == 'settings'):
             return
-        #del self.hierarchy_index[:]
+        del self.hierarchy_index[:]
         self.hierarchy_index.append('settings')
         print(self.hierarchy_index)
-        
-        
-        self.root.get_screen('mainscreen').ids.sm.switch_to(self.setting_screen, direction='right')
-        self.root.get_screen('mainscreen').ids.main_label.text = 'Settings'
-        self.root.get_screen('mainscreen').ids.back_btn.disabled=False
-        
+        #screen = Builder.load_file("./kv/settings.kv")
+        self.root.ids.sm.switch_to(self.setting_screen, direction='right')
+        self.root.ids.main_label.text = 'Settings'
+        self.root.ids.back_btn.disabled=True
 
-    
         
     def go_screen(self, screen_name):
         if (self.hierarchy_index[-1] != screen_name):
@@ -228,93 +170,40 @@ class FluorometerApp(App):
         #sm = self.root.ids.sm
         #sm.switch_to(screen, direction='left')
         
-        self.root.get_screen('mainscreen').ids.sm.switch_to(screen, direction='left')
-        self.root.get_screen('mainscreen').ids.main_label.text = '{0}'.format(screen_name)
-        self.root.get_screen('mainscreen').ids.back_btn.disabled=False
+        self.root.ids.sm.switch_to(screen, direction='left')
+        self.root.ids.main_label.text = '{0}'.format(screen_name)
+        self.root.ids.back_btn.disabled=False
 
     def go_previous(self):
         if len(self.hierarchy_index) == 2:
             if self.hierarchy_index[0] == 'home':
                 self.go_home()
                 return
-            #if self.hierarchy_index[0] == 'settings':
-                #self.go_settings()
-                #return
+            if self.hierarchy_index[0] == 'settings':
+                self.go_settings()
+                return
         
         
         self.hierarchy_index.pop()
         previous_name = self.hierarchy_index[-1]
         print(self.hierarchy_index)
-        print('goto ' + previous_name)
-
+        #self.previous_screen = self.current_screen
+        #self.current_screen = screen_name
         
         screen = self.load_screen(previous_name)
         
+        #sm = self.root.ids.sm
+        #sm.switch_to(screen, direction='left')
         
-        #self.root.ids.sm.switch_to(screen, direction='right')
-        #self.root.ids.main_label.text = '{0}'.format(previous_name)
+        self.root.ids.sm.switch_to(screen, direction='right')
+        self.root.ids.main_label.text = '{0}'.format(previous_name)
         
-        self.root.get_screen('mainscreen').ids.sm.switch_to(screen, direction='right')
-        self.root.get_screen('mainscreen').ids.main_label.text = '{0}'.format(previous_name)
+
         
     def load_screen(self, screen_name):
         screen = Builder.load_file("./kv/{0}.kv".format(screen_name))
         return screen
-
-    def load_fluorometer(self):
-        try:
-            t = time.localtime()
-            self.path_dir = "/home/pi/Fluorometer/Records/" + 'Fluorometer ' + str(time.strftime("%Y_%m_%d",t))
-
-            Path(self.path_dir).mkdir(parents=True, exist_ok=True)
-            print("Fluorometer Record Create")
-            self.record_name = str(time.strftime("%Y_%m_%d",t))
-        except:
-            print(">>>>>Fluorometer Record Failed<<<<")
-            self.record_name = "Folder False"
-            
-    def load_DNA(self):
-        try:
-            t = time.localtime()
-            self.path_dir = "/home/pi/Fluorometer/Records/" + 'DNA ' + str(time.strftime("%Y_%m_%d",t))
     
-            Path(self.path_dir).mkdir(parents=True, exist_ok=True)
-            print("DNA Record Create")
-        except:
-            print(">>>>>DNA Record Failed<<<<")        
-#-----------------------------Data---------------------------------    
-    def go_data(self):
-        #del self.hierarchy_index[:]
-        self.hierarchy_index.append('data')
-        print(self.hierarchy_index)
-        #self.root.switch_to(self.data_screen)
-        self.root.current = 'dataexport'
-        self.root.get_screen('dataexport').ids.filechooser._update_files()
-        
-    def data_back(self):
-        #del self.hierarchy_index[:]
-        self.hierarchy_index.pop()
-        #self.hierarchy_index.append('home')
-        #self.hierarchy_index.append('Fluorometer_real')
-        print(self.hierarchy_index)
-        self.root.current = 'mainscreen'
-        
-    def data_read(self, path, filename):
-        #del self.hierarchy_index[:]
-        self.hierarchy_index.append('read')
-        print(self.hierarchy_index)
-        with open(os.path.join(path, filename[0])) as stream:
-            self.data_read_content = stream.read()
-        #print(self.data_read_content)
-        self.root.get_screen('dataread').ids.dataRst.text = self.data_read_content     
-        self.root.current = 'dataread'
-
-    def read_back(self):
-        #del self.hierarchy_index[:]
-        #self.hierarchy_index.append('data')
-        self.hierarchy_index.pop()
-        print(self.hierarchy_index)
-        self.root.current = 'dataexport'        
 #-----------------------------Settings---------------------------------
     def brightness_control(self, *args):
         self.brightness = str(int(args[1]))
@@ -526,108 +415,74 @@ class FluorometerApp(App):
         chan0min = 32767
         chan0max = 0
         refmin = 32767
-        refmax = 0 
+        refmax = 0
         chan1min = 32767
         chan1max = 0
-        
-        chan_gap = [0, 0]
-        chan_dark = [0, 0]
-        chan_light = [0, 0]
-        chan_result = [0, 0]
-        chan_sum = [0, 0]
-        ref_sum = 0
-        
-        delay_time = float(self.flo_delay_time)
-        gain_input = float(self.adc_gain)
-        sample_rate_input = float(self.sample_rate)
-        self.leds._bcr = int(self.led_current)
-        s_times = int(self.sample_times)
-       
+        chanread = [0,0]
+        chansum = [0, 0, 0]
+        gap = [0, 0, 0]
         try:
             pro_bar = 0
+            gain_input = float(self.adc_gain)
+            sample_rate_input = float(self.sample_rate)
             ads = ADS.ADS1115(self.i2c,gain=gain_input , data_rate=sample_rate_input, address=0x48)
-            chan0 = AnalogIn(ads, ADS.P3)
-            chanref = AnalogIn(ads, ADS.P2)
             chan1 = AnalogIn(ads, ADS.P1)
+            chan2 = AnalogIn(ads, ADS.P2)
+            chan3 = AnalogIn(ads, ADS.P3)
             
-
-            for i in range(s_times):
+            for i in range(10):
+                chanread[0] = chan1.value
+                refread = chan2.value
+                chanread[1] = chan3.value
                 
-                chan_dark[0] = chan0.value
-                ref_dark = chanref.value
-                chan_dark[1] = chan1.value
-                
-                if chan0min > chan_dark[0]:
-                    chan0min = chan_dark[0]
-                if chan0max < chan_dark[0]:
-                    chan0max = chan_dark[0]
-                  
-                if refmin > ref_dark:
-                    refmin = ref_dark
-                if refmax < ref_dark:
-                    refmax = ref_dark
-                        
-                if chan1min > chan_dark[1]:
-                    chan1min = chan_dark[1]
-                if chan1max < chan_dark[1]:
-                    chan1max = chan_dark[1] 
+                if chan0min > chanread[0]:
+                    chan0min = chanread[0]
+                if chan0max < chanread[0]:
+                    chan0max = chanread[0]
+                    
+                if refmin > refread:
+                    refmin = refread
+                if refmax < refread:
+                    refmax = refread
+                    
+                if chan1min > chanread[1]:
+                    chan1min = chanread[1]
+                if chan1max < chanread[1]:
+                    chan1max = chanread[1]
 
                 
-                chan_sum[0] = chan_sum[0] + chan_dark[0]
-                chan_sum[1] = chan_sum[1] + chan_dark[1]
-                ref_sum = ref_sum + ref_dark
-                print(str(chan_dark[0]) + " " + \
-                      str(chan_dark[1]) + " " + \
-                      str(ref_dark))
-                
-                pro_bar += 100/s_times
+                chansum[0] = chansum[0] + chanread[0]
+                chansum[1] = chansum[1] + refread
+                chansum[2] = chansum[2] + chanread[1]
+                print(str(chanread[1]) +" "+str(refread) +" "+ str(chanread[0]))
+                pro_bar += 10
                 self.pop_up.set_bar(pro_bar)
+                
+            print('ADC average: ')
+            print(str(chansum[2]/10)+" "+str(chansum[1]/10)+" "+str(chansum[0]/10))
+            self.flo_read[0] = str(chansum[2]/10)
+            self.flo_read[1] = str(chansum[1]/10)
+            self.flo_read[2] = str(chansum[0]/10)
 
-
-
-            chan_result[0] = chan_sum[0]/s_times 
-            chan_result[1] = chan_sum[1]/s_times
-            ref_result = ref_sum/s_times 
-            
-            #show result
-            chan_result[0] = round(chan_result[0], 1)
-            chan_result[1] = round(chan_result[1], 1)
-            ref_result = round(ref_result, 1)
-            
-            print('Dark average: ')
-            print(str(chan_result[0])+ " " +str(chan_result[1]) + " " +str(ref_result))
-
-            self.flo_read[0] = str(chan_result[0])
-            self.flo_read[1] = str(ref_result)
-            self.flo_read[2] = str(chan_result[1])
-
-            chan_gap[0] = chan0max - chan0min
-            chan_gap[1] = chan1max - chan1min
-            ref_gap = refmax - refmin
+            gap[0] = chan0max - chan0min
+            gap_ref = refmax - refmin
+            gap[1] = chan1max - chan1min
             
             print('Gap:')
-            print('Max: ' + str(chan0max) + " " + str(chan1max) + " " + str(refmax))
-            print('Min: ' + str(chan0min) + " " + str(chan1min) + " " + str(refmin))
-            print('Result: ' + str(chan_gap[0]) + " " +str(chan_gap[1]) + " " + str(ref_gap))
-            print('------------------------------------------------------------------------------')
-            self.gap_read[0] = str(chan_gap[0])
-            self.gap_read[1] = str(ref_gap)
-            self.gap_read[2] = str(chan_gap[1])
+            print(str(chan0max)+" "+str(chan1max)+" "+str(refmax))
+            print(str(chan0min)+" "+str(chan1min)+" "+str(refmin))
+            print(str(gap[0])+" "+str(gap[1])+" "+str(gap[0]))
+            print('------------------')
+            self.gap_read[0] = str(gap[0])
+            self.gap_read[1] = str(gap[1])
+            self.gap_read[2] = str(gap[2])
             
             self.pop_up.dismiss()
         except:
             self.pop_up.dismiss()
-            print('No LED test failed')
+            print('ADC average test failed')
            
     def adc_aver_with_led_thread(self): #LED always on mode
-        t = time.localtime()
-        index_name ='LED continue ' + str(time.strftime("%H_%M_%S",t))
-        #self.name = time.strftime("%Y_%m_%d_%H_%M",t)
-        record_name = self.path_dir + '/' + index_name
-        #self.name = '/home/pi/Fluorometer/Records/' + self.name + '.txt'
-        self.f_record = True
-        flo_record = open(record_name, "w")
-        
         chan0min = 32767
         chan0max = 0
         refmin = 32767
@@ -648,29 +503,27 @@ class FluorometerApp(App):
         sample_rate_input = float(self.sample_rate)
         self.leds._bcr = int(self.led_current)
         s_times = int(self.sample_times)
-        #comment if auto-record
-        #if self.f_record:
-            #flo_record = open(self.name, "a")
+        
+        if self.f_record:
+            flo_record = open(self.name, "a")
             
         try:
             ads = ADS.ADS1115(self.i2c,gain=gain_input , data_rate=sample_rate_input, address=0x48)
-            title_name ='LED continue test ' + str(time.strftime("%Y%m%d_%H%M",t))
             print('')
             print('')
-            print(title_name)
+            print('No blink test')
             print("-----------delay time [" + str(delay_time) + "] current [" + str(self.leds._bcr) + "] ------------\n")    
             if self.f_record:
-                
                 flo_record.write('\n')
-                flo_record.write(title_name)
                 flo_record.write('\n')
-                flo_record.write('===========================================================\n')
-                flo_record.write('\n')
-                flo_record.write("delay time [" + str(delay_time) + "] current [" + str(self.leds._bcr) + "]\n")
-                flo_record.write('\n')
-                
+                flo_record.write('No blink test\n')
+                flo_record.write("-----------delay time [" + str(delay_time) + "] current [" + str(self.leds._bcr) + "] ------------\n")
+                    
             pro_bar = 0
            
+            
+
+            
             chan0 = AnalogIn(ads, ADS.P3)
             chanref = AnalogIn(ads, ADS.P2)
             chan1 = AnalogIn(ads, ADS.P1)
@@ -685,12 +538,7 @@ class FluorometerApp(App):
             self.leds[1] = (65535, 65535, 65535) #led on
             self.leds.show()
             time.sleep(delay_time) #delay
-
-
-            if self.f_record:
-                flo_record.write("========  ========  ========  ========  ========  ========\n")
-                flo_record.write("CH1 Dark  CH1       CH2 Dark  CH2       Ref Dark  Ref\n")
-                flo_record.write("========  ========  ========  ========  ========  ========\n")
+            
             for i in range(s_times):
                 chan_light[0] = chan0.value
                 ref_light = chanref.value
@@ -714,26 +562,23 @@ class FluorometerApp(App):
                 chan_sum[0] = chan_sum[0] + chan_light[0]
                 chan_sum[1] = chan_sum[1] + chan_light[1]
                 ref_sum = ref_sum + ref_light
-                print('{0:<7}  {1:<7}  {2:<7}  {3:<7}  {4:<7}  {5:<7}\n'.format(chan_dark[0],chan_light[0],chan_dark[1],chan_light[1],ref_dark,ref_light))
-                #print(str(chan_dark[0]) + " " + str(chan_light[0]) + " " + \
-                      #str(chan_dark[1]) + " " + str(chan_light[1]) + " " + \
-                      #str(ref_dark) + " " + str(ref_light))
+                
+                print(str(chan_dark[0]) + " " + str(chan_light[0]) + " " + \
+                      str(chan_dark[1]) + " " + str(chan_light[1]) + " " + \
+                      str(ref_dark) + " " + str(ref_light))
                 
                 if self.f_record:
-                      
-                    #flo_record.write(str(chan_dark[0]) +" "+str(chan_light[0]) +" "+ \
-                                     #str(chan_dark[1]) +" "+str(chan_light[1]) +" "+ \
-                                     #str(ref_dark) + " " + str(ref_light) + "\n")                
-                    flo_record.write('{0:<8}  {1:<8}  {2:<8}  {3:<8}  {4:<8}  {5:<8}\n'.format(chan_dark[0],chan_light[0],chan_dark[1],chan_light[1],ref_dark,ref_light))
-                      
+                    flo_record.write(str(chan_dark[0]) +" "+str(chan_light[0]) +" "+ \
+                                     str(chan_dark[1]) +" "+str(chan_light[1]) +" "+ \
+                                     str(ref_dark) + " " + str(ref_light) + "\n")                
+
                 pro_bar += 100/s_times
                 self.pop_up.set_bar(pro_bar)
 
             self.leds[1] = (0, 0, 0) #led off
-            self.leds.show()
-            if self.f_record:
-                flo_record.write("========  ========  ========  ========  ========  ========\n")
-                flo_record.write("\n")
+            self.leds.show()    
+
+            
             chan_result[0] = chan_sum[0]/s_times - chan_dark[0] 
             chan_result[1] = chan_sum[1]/s_times - chan_dark[1]
             ref_result = ref_sum/s_times - ref_dark
@@ -743,11 +588,18 @@ class FluorometerApp(App):
             chan_result[1] = round(chan_result[1], 1)
             ref_result = round(ref_result, 1)
             
-            print("result led continue: ")
+            print("result led no blink: ")
             print('Dark: ' + str(chan_dark[0]) + " " + str(chan_dark[1]) + " " + str(ref_dark))
             print('Aver: ' + str(chan_sum[0]/s_times)+ " " +str(chan_sum[1]/s_times) + " " +str(ref_sum/s_times))
             print('Sub: ' + str(chan_result[0])+ " " +str(chan_result[1]) + " " +str(ref_result))
             print('------------------------')
+
+            if self.f_record:
+                flo_record.write("result led no blink: \n")
+                flo_record.write('Dark: ' + str(chan_dark[0]) + " " + str(chan_dark[1]) + " " + str(ref_dark) + "\n")
+                flo_record.write('Aver: ' + str(chan_sum[0]/s_times)+ " " +str(chan_sum[1]/s_times) + " " +str(ref_sum/s_times) + "\n")
+                flo_record.write('Sub: ' + str(chan_result[0])+ " " +str(chan_result[1]) + " " +str(ref_result) + "\n")
+                flo_record.write('---------------------------------------------------------------------------------------------------------------------------\n')
                 
             self.flo_read[0] = str(chan_result[0])
             self.flo_read[1] = str(ref_result)
@@ -766,40 +618,14 @@ class FluorometerApp(App):
             self.gap_read[1] = str(ref_gap)
             self.gap_read[2] = str(chan_gap[1])
             
-            if self.f_record:
-                flo_record.write("Result\n")
-                flo_record.write("\n")
-                flo_record.write("========  ========  ========  ========\n")
-                flo_record.write("Result    CH1       CH2       Ref\n")
-                flo_record.write("========  ========  ========  ========\n")
-                flo_record.write('Dark      {0:<8}  {1:<8}  {2:<8}\n'.format(chan_dark[0],chan_dark[1],ref_dark))
-                flo_record.write('Aver      {0:<8}  {1:<8}  {2:<8}\n'.format(chan_sum[0]/s_times,chan_sum[1]/s_times,ref_sum/s_times))
-                flo_record.write('Sub       {0:<8}  {1:<8}  {2:<8}\n'.format(chan_result[0],chan_result[1],ref_result))
-                flo_record.write('Gap       {0:<8}  {1:<8}  {2:<8}\n'.format(chan_gap[0],chan_gap[1],ref_gap))
-                flo_record.write("========  ========  ========  ========\n")
-                flo_record.write("\n")
-                #flo_record.write('Dark: ' + str(chan_dark[0]) + " " + str(chan_dark[1]) + " " + str(ref_dark) + "\n")
-                #flo_record.write('Aver: ' + str(chan_sum[0]/s_times)+ " " +str(chan_sum[1]/s_times) + " " +str(ref_sum/s_times) + "\n")
-                #flo_record.write('Sub: ' + str(chan_result[0])+ " " +str(chan_result[1]) + " " +str(ref_result) + "\n")
-                #flo_record.write('---------------------------------------------------------------------------------------------------------------------------\n')
-                flo_record.close()
-                
             self.pop_up.dismiss()
-        
+            
         except:
             self.pop_up.dismiss()
             print('ADC average led no blink failed')
     
 
-    def adc_aver_with_blink_sub_gaincontrol_thread(self):     #blink with sub test
-        t = time.localtime()
-        index_name ='LED Blink ' + str(time.strftime("%H_%M_%S",t))
-        #self.name = time.strftime("%Y_%m_%d_%H_%M",t)
-        record_name = self.path_dir + '/' + index_name
-        #self.name = '/home/pi/Fluorometer/Records/' + self.name + '.txt'
-        self.f_record = True
-        flo_record = open(record_name, "w")
-        
+    def adc_aver_with_blink_sub_gaincontrol_thread(self):
         gainrange = [1, 2, 4, 8, 16]
         chan0min = 32767
         chan0max = 0
@@ -823,37 +649,29 @@ class FluorometerApp(App):
         self.leds._bcr = int(self.led_current)
         s_times = int(self.sample_times)
         
-        #comment if auto-record
-        #if self.f_record:
-            #flo_record = open(self.name, "a")
+        if self.f_record:
+            flo_record = open(self.name, "a")
         try:
             pro_bar = 0
             ads = ADS.ADS1115(self.i2c,gain=gain_input , data_rate=sample_rate_input, address=0x48)
             chan0 = AnalogIn(ads, ADS.P3)
             chanref = AnalogIn(ads, ADS.P2)
             chan1 = AnalogIn(ads, ADS.P1)
-            #t = time.localtime()
-            title_name ='LED Blink test ' + str(time.strftime("%Y_%m_%d_%H_%M",t))
+            
             #--------------------------first read------------------
             for ap in gainrange:
                 pass_flag = True
                 print('')
                 print('')
-                print(title_name)
                 print("-----------start over with amplify [" + str(ap) + "] gain [" + str(gain_input) + "]--------------")
                 print("-----------delay time [" + str(delay_time) + "] current [" + str(self.leds._bcr) + "] ------------\n")
                 
                 if self.f_record:
                     flo_record.write('\n')
-                    flo_record.write(title_name)
                     flo_record.write('\n')
-                    flo_record.write('===========================================================\n')
-                    flo_record.write('\n')
-                    flo_record.write("start over with amplify [" + str(ap) + "] gain [" + str(gain_input) + "]\n")
-                    flo_record.write('\n')
-                    flo_record.write('\n')
-                    flo_record.write("delay time [" + str(delay_time) + "] current [" + str(self.leds._bcr) + "]\n")
-                    flo_record.write('\n')
+                    flo_record.write('Blink test\n')
+                    flo_record.write("-----------start over with amplify [" + str(ap) + "] gain [" + str(gain_input) + "]--------------\n")
+                    flo_record.write("-----------delay time [" + str(delay_time) + "] current [" + str(self.leds._bcr) + "] ------------\n")
                     
                 chan_dark[0] = chan0.value
                 ref_dark = chanref.value
@@ -871,18 +689,14 @@ class FluorometerApp(App):
                     if (read > 25000):
                         print("-------reach max, reducing gain-------")
                         if self.f_record:
-                            flo_record.write('\n')
-                            flo_record.write("reach max, reducing gain\n")
-                            flo_record.write('\n')
+                            flo_record.write("-------reach max, reducing gain-------\n")
                         gain_input = gain_input/2
 
                         
                         if (gain_input < 1):
                             print('reach minimal gain, abort')
                             if self.f_record:
-                                flo_record.write('\n')
                                 flo_record.write('reach minimal gain, abort\n')
-                                flo_record.write('\n')
                             self.pop_up.dismiss()
                             return
                        
@@ -905,21 +719,21 @@ class FluorometerApp(App):
             chan_sub[1] = (chan_light[1] - chan_dark[1]) * ap
             ref_sub = (ref_light - ref_dark) * ap
             
-            #if chan0min > chan_sub[0]:
-            chan0min = chan_sub[0]
-            #if chan0max < chan_sub[0]:
-            chan0max = chan_sub[0]
+            if chan0min > chan_sub[0]:
+                chan0min = chan_sub[0]
+            if chan0max < chan_sub[0]:
+                chan0max = chan_sub[0]
                 
                     
-            #if chan1min > chan_sub[1]:
-            chan1min = chan_sub[1]
-            #if chan1max < chan_sub[1]:
-            chan1max = chan_sub[1]
+            if chan1min > chan_sub[1]:
+                chan1min = chan_sub[1]
+            if chan1max < chan_sub[1]:
+                chan1max = chan_sub[1]
 
-            #if refmin > ref_sub:
-            refmin = ref_sub
-            #if refmax < ref_sub:
-            refmax = ref_sub    
+            if refmin > ref_sub:
+                refmin = ref_sub
+            if refmax < ref_sub:
+                refmax = ref_sub    
             
             chan_sum[0] = chan_sum[0] + chan_sub[0]
             chan_sum[1] = chan_sum[1] + chan_sub[1]
@@ -930,16 +744,9 @@ class FluorometerApp(App):
                   str(ref_dark) + " " + str(ref_light) + " " + str(ref_sub))
             
             if self.f_record:
-                flo_record.write("========  ========  ========  ========  ========  ========  ========  ========  ========\n")
-                #flo_record.write("CH1 Dark  CH1       CH1 Sub   CH2 Dark  CH2       CH2 Sub   Ref Dark  Ref       Ref Sub\n")
-                flo_record.write("CH1 Dark  CH1 Lit   CH1 Sub   CH2 Dark  CH2 Lit   CH2 Sub   Ref Dark  Ref Lit   Ref Sub\n")
-                flo_record.write("========  ========  ========  ========  ========  ========  ========  ========  ========\n")
-                
-                flo_record.write('{0:<8}  {1:<8}  {2:<8}  {3:<8}  {4:<8}  {5:<8}  {6:<8}  {7:<8}  {8:<8}\n'.format(chan_dark[0],chan_light[0],chan_sub[0],chan_dark[1],chan_light[1],chan_sub[1],ref_dark,ref_light,ref_sub))
-                
-                #flo_record.write(str(chan_dark[0]) +" "+str(chan_light[0]) +" "+ str(chan_sub[0]) + "  " + \
-                                 #str(chan_dark[1]) +" "+str(chan_light[1]) +" "+ str(chan_sub[1]) + "  " + \
-                                 #str(ref_dark) + " " + str(ref_light) + " " + str(ref_sub) + "\n")
+                flo_record.write(str(chan_dark[0]) +" "+str(chan_light[0]) +" "+ str(chan_sub[0]) + "  " + \
+                                 str(chan_dark[1]) +" "+str(chan_light[1]) +" "+ str(chan_sub[1]) + "  " + \
+                                 str(ref_dark) + " " + str(ref_light) + " " + str(ref_sub) + "\n")
 
                 
             self.leds[1] = (0, 0, 0)
@@ -993,22 +800,17 @@ class FluorometerApp(App):
                 
                 
                 if self.f_record:
-                    #flo_record.write(str(chan_dark[0]) +" "+str(chan_light[0]) +" "+ str(chan_sub[0]) + "  " + \
-                                     #str(chan_dark[1]) +" "+str(chan_light[1]) +" "+ str(chan_sub[1]) + "  " + \
-                                     #str(ref_dark) + " " + str(ref_light) + " " + str(ref_sub) + "\n")
-                    flo_record.write('{0:<8}  {1:<8}  {2:<8}  {3:<8}  {4:<8}  {5:<8}  {6:<8}  {7:<8}  {8:<8}\n'.format(chan_dark[0],chan_light[0],chan_sub[0],chan_dark[1],chan_light[1],chan_sub[1],ref_dark,ref_light,ref_sub))
+                    flo_record.write(str(chan_dark[0]) +" "+str(chan_light[0]) +" "+ str(chan_sub[0]) + "  " + \
+                                     str(chan_dark[1]) +" "+str(chan_light[1]) +" "+ str(chan_sub[1]) + "  " + \
+                                     str(ref_dark) + " " + str(ref_light) + " " + str(ref_sub) + "\n")
                     
                 self.leds[1] = (0, 0, 0)
                 self.leds.show() #led loop off
                 time.sleep(delay_time) #delay
                 pro_bar += 100/s_times
                 self.pop_up.set_bar(pro_bar)
-
-            if self.f_record:
-                flo_record.write("========  ========  ========  ========  ========  ========  ========  ========  ========\n")
-                flo_record.write("\n")
-            
-            
+                
+            print("result blink sub with gain control: ")
             
             chan_result[0] = chan_sum[0]/s_times
             chan_result[1] = chan_sum[1]/s_times
@@ -1018,6 +820,13 @@ class FluorometerApp(App):
             chan_result[1] = round(chan_result[1], 1)
             ref_result = round(ref_result, 1)
             
+            print(str(chan_result[0])+ " " +str(chan_result[1]) + " " + str(ref_result))
+            
+            if self.f_record:
+                flo_record.write("result blink sub with gain control: \n")
+                flo_record.write(str(chan_result[0])+ " " +str(chan_result[1]) + " " + str(ref_result) + "\n")
+                flo_record.write('---------------------------------------------------------------------------------------------------------------------------\n')
+
             self.flo_read[0] = str(chan_result[0])
             self.flo_read[1] = str(ref_result)
             self.flo_read[2] = str(chan_result[1])
@@ -1026,36 +835,18 @@ class FluorometerApp(App):
             ref_gap = refmax - refmin
             chan_gap[1] = chan1max - chan1min
             
-            print("result blink sub with gain control: ")
-            print(str(chan_result[0])+ " " +str(chan_result[1]) + " " + str(ref_result))
             print('Gap:')
             print('Max: ' + str(chan0max) + " " + str(chan1max) + " " + str(refmax))
             print('Min: ' + str(chan0min) + " " + str(chan1min) + " " + str(refmin))
             print('Result: ' + str(chan_gap[0]) + " " +str(chan_gap[1]) + " " + str(ref_gap))
             print('------------------------------------------------------------------------------')
-            
             self.gap_read[0] = str(chan_gap[0])
             self.gap_read[1] = str(ref_gap)
             self.gap_read[2] = str(chan_gap[1])
             
             ads = ADS.ADS1115(self.i2c,gain=float(self.adc_gain) , data_rate=sample_rate_input, address=0x48)
-            
             if self.f_record:
-                flo_record.write("Result\n")
-                flo_record.write("\n")
-                flo_record.write("========  ========  ========  ========\n")
-                flo_record.write("Result    CH1       CH2       Ref\n")   
-                flo_record.write("========  ========  ========  ========\n")
-                flo_record.write('Aver       {0:<8}  {1:<8}  {2:<8}\n'.format(chan_result[0],chan_result[1],ref_result))
-                flo_record.write('Gap       {0:<8}  {1:<8}  {2:<8}\n'.format(chan_gap[0],chan_gap[1],ref_gap))
-                flo_record.write("========  ========  ========  ========\n")
-                flo_record.write("\n")
                 flo_record.close()
-                
-                #flo_record.write("result blink sub with gain control: \n")
-                #flo_record.write(str(chan_result[0])+ " " +str(chan_result[1]) + " " + str(ref_result) + "\n")
-                #flo_record.write('---------------------------------------------------------------------------------------------------------------------------\n')
-                
             self.pop_up.dismiss()
         
         except:
@@ -1138,16 +929,15 @@ class FluorometerApp(App):
         self.show_popup()
         mythread = threading.Thread(target=self.read_led_current_thread)
         mythread.start()
-    '''        
+        
     def create_fluorometer_record(self):
         t = time.localtime()
         self.name = time.strftime("%Y_%m_%d_%H_%M",t)
         self.record_name = self.name
-        self.name = '/home/pi/Fluorometer/Records/' + self.name
-        #self.name = '/home/pi/Fluorometer/Records/' + self.name + '.txt'
+        self.name = 'home/pi/Fluorometer/Records/' + self.name + '.txt'
         self.f_record = True
         flo_record = open(self.name, "w")
-    '''
+
     def export_to_usb(self):
         try:
             os.system("mount /dev/sda1 /mnt")
@@ -1371,4 +1161,4 @@ class FluorometerApp(App):
       
         
 if __name__ == '__main__':
-    FluorometerApp().run()
+    ShowcaseApp().run()

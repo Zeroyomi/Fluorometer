@@ -1,8 +1,9 @@
-
 #:import Factory kivy.factory.Factory
-
-<ShowcaseScreen>:
-	
+WindowManager:
+	MainScreen:
+	Exportdata:
+	DataRead:
+<ShowcaseScreen>:	
     ScrollView:
         do_scroll_x: False
         do_scroll_y: False 
@@ -18,81 +19,233 @@
                 height: self.height 
 
 
-	
-BoxLayout:
-    orientation: 'vertical'
+<MainScreen>:
+	name: 'mainscreen'
+	BoxLayout:
+		orientation: 'vertical'
+		canvas.before:
+			Color:
+				#rgb: .6, .6, .6
+			Rectangle:
+				size: self.size
+				source: './images/background_w.png'
+		
+		FloatLayout:
+			size_hint:(1,0.08)
+			height: 64
+			
+			Label:
+				id:app_clock
+				size_hint:.3, .2
+				font_size:18
+				pos:(root.width - self.width, root.height - self.height - 5)
+				text:
+				background_color:(255,255,255,1)
+				#canvas.before:
+					#Color:
+						#rgba:(0,0,0,1)
+					#Rectangle:
+						#size: self.size
+						#pos: self.pos
+			Label:
+				id:main_label
+				pos:(0, root.height - self.height - app_clock.height)
+				text:"Choose an assay"
+				font_size:40
+				background_color:(255,255,255,1)
+				
 
-    canvas.before:
+			Button:
+				id:back_btn
+				disabled:True
+				background_disabled_normal: './images/back_disable.png'
+				background_normal:'./images/back.png' 
+				background_down:'./images/back.png' 
+				pos:(0, root.height - self.height)
+				size_hint: (None, None)
+				size:64,64
+				
+				on_release:app.go_previous()
+	   
+
+		ScreenManager:
+			id: sm
+			size_hint:(1,0.8)
+
+				
+		GridLayout:
+			cols:2
+			size_hint:(1,0.1)
+			
+			Button:
+				id:home
+				#text:"Menu"
+				text:"Export"
+				font_size:36
+				background_normal: ''
+				background_color: '#c40e25'
+				#on_release:app.go_home()
+				on_release: app.go_data()
+			Button:
+				
+				id:set
+				text:"Settings"
+				font_size:36
+				background_normal: ''
+				background_color: '#c40e25'
+				on_release:app.go_settings()
+				
+<Exportdata>:
+	name: 'dataexport'
+	id:export_data
+	canvas.before:
         Color:
-            #rgb: .6, .6, .6
+            rgb: 1, 1, 1
         Rectangle:
-            size: self.size
-            source: './images/background_w.png'
-	
-	FloatLayout:
-		size_hint:(1,0.08)
-        height: 64
-		
-		
-		
-		Label:
-			id:main_label
-			pos:(0, root.height - self.height)
-			text:"Choose an assay"
-			#color:'#ffffff'
-			#size_hint: (1, 0.4)
-			font_size:40
-			background_color:(255,255,255,1)
+            pos: self.pos
+            size: root.size
+	BoxLayout:
+		orientation: 'vertical'
+		BoxLayout:
+			orientation: 'horizontal'	
+			size_hint:(1,0.1)
+			Button:
+				text:"Data"
+				font_size:36
+				background_normal: ''
+				background_color: '#c40e25'
 			
-			#canvas.before:
-				#Color:
-					#rgba:self.background_color
-				#Rectangle:
-					#size: self.size
-					#pos: self.pos
-				#Line:
-					#width: 5
-					#rectangle: self.x - 10, self.y, self.width + 20, self.height
+		FileChooserListView:
+		#FileChooserIconView:	
+			id:filechooser
+			multiselect: False
+			#dirselect: True
+			#rootpath:"F:\Python_project\Kivy\Fluorometer\Records"
+			rootpath:"/home/pi/Fluorometer/Records"
+			on_selection:export_data.selected(filechooser.selection)
+			on_submit:app.data_read(filechooser.path, filechooser.selection)
+			
+		BoxLayout:
+			background_color:(1,1,1,1)
+			orientation: 'horizontal'	
+			size_hint:(0.4,0.1)
+			pos_hint:{'x':.3}
+			Button:
+				id:data_usb
+				text:"Export"
+				font_size:36
+				background_normal: ''
+				background_color: '#c40e25'
+				on_release:
+			
+		BoxLayout:
+			orientation: 'horizontal'	
+			size_hint:(1,0.1)
+			Button:
+				id:data_back
+				text:"Back"
+				font_size:36
+				background_normal: ''
+				background_color: '#c40e25'
+				on_release:app.data_back()	
+			
+			Button:
+				id:data_read
+				text:"Read"
+				font_size:36
+				background_normal: ''
+				background_color: '#c40e25'
+				on_release:app.data_read(filechooser.path, filechooser.selection)
+			
+			Button:
+				id:data_delete
+				text:"Delete"
+				font_size:36
+				background_normal: ''
+				background_color: '#c40e25'
+				on_release:
+					export_data.delete(filechooser.selection)
+					filechooser._update_files()
+					
+				
+<DataRead>:
+	name:'dataread'
+	BoxLayout:
+        orientation: 'vertical'
+		RstDocument:
+			size_hint:(1,0.9)
+			id:dataRst
+			text: 
+			show_errors: True
+			
 		Button:
-			id:back_btn
-			disabled:False
-			background_disabled_normal: './images/back_disable.png'
-			background_normal:'./images/back.png' 
-			background_down:'./images/back.png' 
-			pos:(0, root.height - self.height)
-			size_hint: (None, None)
-			size:64,64
+			size_hint:(1,0.1)
+			text:"Close"
+			font_size:36
+			background_normal: ''
+			background_color: '#c40e25'
+			on_release:app.read_back()	
+								
+<FileChooserListView>:
+	canvas.before:
+        Color:
+            rgb: 1, 1, 1
+        Rectangle:
+            pos: (0,0.1)
+            size: root.size
 			
-			on_release:app.go_previous()
-   
+    layout: layout
+    FileChooserListLayout:
+        id: layout
+        controller: root
 
-    ScreenManager:
-		size_hint:(1,0.8)
-        id: sm
-        #on_current_screen:
-            
-	GridLayout:
-		cols:2
-		size_hint:(1,0.1)
 		
-		Button:
+[FileListEntry@FloatLayout+TreeViewNode]:
+    locked: False
+    entries: []
+    path: ctx.path
+    # FIXME: is_selected is actually a read_only treeview property. In this
+    # case, however, we're doing this because treeview only has single-selection
+    # hardcoded in it. The fix to this would be to update treeview to allow
+    # multiple selection.
+    is_selected: self.path in ctx.controller().selection
+
+    orientation: 'horizontal'
+    size_hint_y: None
+    height: '96dp' if dp(1) > 1 else '48dp'
+    # Don't allow expansion of the ../ node
+    is_leaf: not ctx.isdir or ctx.name.endswith('..' + ctx.sep) or self.locked
+    on_touch_down: self.collide_point(*args[1].pos) and ctx.controller().entry_touched(self, args[1])
+    on_touch_up: self.collide_point(*args[1].pos) and ctx.controller().entry_released(self, args[1])
+
+	BoxLayout:
+        pos: root.pos
+        size_hint_x: None
+        width: root.width - dp(10)
+        Label:
+			# --------------
+            # CHANGE NAME COLOR
+            # --------------
+			color:"#c40e25"
+            id: filename
+            #text_size: self.width, None
+			font_size: 32
+            halign: 'left'
+            shorten: True
+            text: ctx.name
+            font_name: ctx.controller().font_name
 			
-			id:home
-			
-			text:"Menu"
-			font_size:36
-			background_normal: ''
-			background_color: '#c40e25'
-			on_release:app.go_home()
-		Button:
-			
-			id:set
-			text:"Settings"
-			font_size:36
-			background_normal: ''
-			background_color: '#c40e25'
-			on_release:app.go_settings()
-			
+        #Label:
+			# --------------
+            # CHANGE SIZE COLOR
+            # --------------
+			#color:"#c40e25"
+            #text_size: self.width, None
+            #size_hint_x: None
+            #halign: 'right'
+            #text: '{}'.format(ctx.get_nice_size())
+            #font_name: ctx.controller().font_name
+	
 <PopupBox>:
     pop_up_text: _pop_up_text
 	reading_progress_bar: _reading_progress_bar
@@ -115,3 +268,5 @@ BoxLayout:
 			value:0
 			min:0
 			max:100
+			
+			
