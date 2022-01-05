@@ -7,48 +7,124 @@ ShowcaseScreen:
 		padding:20
 		spacing:30
 		
-		Label:
-			text:'Enter original sample volume'
-			font_size:24
-			size_hint:(1,0.2)
+		BoxLayout:
+			size_hint:(1,0.7)
+			orientation: "vertical"
+			Label:
+				text:'Enter original sample volume'
+				font_size:24
+				
+				color: '#c40e25'
+				
+			Label:
+				id:label_DNA_volume
+				text:str(app.DNA_volume)
+				#text:'{}'.format(bright.value)
+				font_size:16
+				size_hint:(1,0.1)	
+				color: '#c40e25'
+				
+			Slider:
+				id:Slidre_DNA_volume
+				cursor_image:'./images/slider.png'
+				min:1
+				max:20
+				step:1
+				value:1
+				size_hint:(1,0.2)
+				orientation: 'horizontal'
+				on_value:
+					app.DNA_volume = self.value
+				
+			Label:
+				text:'Output sample units'
+				font_size:16
+				size_hint:(1,0.1)
+				color: '#c40e25'
+				
+		BoxLayout:
 			
-		Label:
-			id:brightness_value
-			text:'{}'.format(bright.value)
-			font_size:16
-			size_hint:(1,0.1)	
-			
-		Slider:
-			min:1
-			max:20
-			step:1
-			value:2
-			size_hint:(1,0.2)
-			id: bright
-			orientation: 'horizontal'
-			on_value:
-			
-		Label:
-			text:'Output sample units'
-			font_size:16
-			size_hint:(1,0.1)
-			
-			
-		Spinner:
-			id:s_dna_units
-			size_hint:(1,0.2)
-			text: 'ng/μL'
-			values: ('ng/μL', 'ng/ML', 'μg/μL', 'μg/mL', 'mg/mL')
-			on_text: 
-				if s_dna_units.text == "ng/μL": app.unit = 1
-				elif s_dna_units.text == "ng/ML": app.unit = 10
-				elif s_dna_units.text == "μg/μL": app.unit = 100
-				elif s_dna_units.text == "μg/mL": app.unit = 1000
-				elif s_dna_units.text == "mg/mL": app.unit = 10000
-		
-		Button:
-			text: 'Read tube'
-			size_hint:(1,0.2)
-			font_size:30
-			on_release:app.read_tube()
+			spacing:30
+			size_hint:(1,0.15)	
+			Button:
+				id: unit_selector
+				text: 'ng/μL'
+				font_size:20
+				background_normal: ''
+				background_color: '#c40e25'
+				on_release: dropdown.open(self)
+				size_hint_y: None
+				
+
+			Widget:
+				on_parent: dropdown.dismiss()	
+				
+			DropDown:
+				id: dropdown
+				on_select: unit_selector.text = '{}'.format(args[1])
+
+				Button:
+					text: 'ng/μL'
+					size_hint_y: None
+					font_size:20
+					background_normal: ''
+					background_color: '#c40e25'
+					on_release: dropdown.select('ng/μL')
+
+				Button:
+					text: 'ng/mL'
+					size_hint_y: None
+					font_size:20
+					background_normal: ''
+					background_color: '#c40e25'
+					on_release: dropdown.select('ng/mL')
+
+				Button:
+					text: 'μg/μL'
+					size_hint_y: None
+					font_size:20
+					background_normal: ''
+					background_color: '#c40e25'
+					on_release: dropdown.select('μg/μL')
+				Button:
+					text: 'μg/mL'
+					size_hint_y: None
+					font_size:20
+					background_normal: ''
+					background_color: '#c40e25'
+					on_release: dropdown.select('μg/mL')
+				Button:
+					text: 'mg/mL'
+					size_hint_y: None
+					font_size:20
+					background_normal: ''
+					background_color: '#c40e25'
+					on_release: dropdown.select('mg/mL')		
+		#Spinner:
+			#id:s_dna_units
+			#size_hint:(1,0.25)
+			#background_normal: ''
+			#background_color: '#c40e25'
+			#text: 'ng/μL'
+			#font_size:30
+			#height : 40
+			#values: ('ng/μL', 'ng/mL', 'μg/μL', 'μg/mL', 'mg/mL')
+			#on_text: 
+				#if s_dna_units.text == "ng/μL": app.DNA_unit = "ng/μL"
+				#elif s_dna_units.text == "ng/ML": app.DNA_unit = "ng/mL"
+				#elif s_dna_units.text == "μg/μL": app.DNA_unit = "μg/μL"
+				#elif s_dna_units.text == "μg/mL": app.DNA_unit = "μg/mL"
+				#elif s_dna_units.text == "mg/mL": app.DNA_unit = "mg/mL"
+				
+		BoxLayout:
+			size_hint:(1,0.15)
+			Button:
+				text: 'Read tube'
+				font_size:30
+				size_hint_y: None
+				background_normal: ''
+				background_color: '#c40e25'
+				on_release:
+					app.read_AccuClear_tube() if app.DNA_type == 'AccuClear' else \ 
+					app.read_AccuGreen_tube()
 			

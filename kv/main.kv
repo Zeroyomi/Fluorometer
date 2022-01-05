@@ -1,8 +1,12 @@
 #:import Factory kivy.factory.Factory
+<Widget>:
+    font_name: '/home/pi/Fluorometer/msyh.ttc'
+
 WindowManager:
 	MainScreen:
 	Exportdata:
 	DataRead:
+	DataRead2:
 <ShowcaseScreen>:	
     ScrollView:
         do_scroll_x: False
@@ -38,36 +42,44 @@ WindowManager:
 				id:app_clock
 				size_hint:.3, .2
 				font_size:18
-				pos:(root.width - self.width, root.height - self.height - 5)
+				pos:((root.width - self.width)/2, root.height - self.height - 5)
 				text:
 				background_color:(255,255,255,1)
-				#canvas.before:
-					#Color:
-						#rgba:(0,0,0,1)
-					#Rectangle:
-						#size: self.size
-						#pos: self.pos
+
 			Label:
 				id:main_label
 				pos:(0, root.height - self.height - app_clock.height)
-				text:"Choose an assay"
+				text:l._(app.title_name)
 				font_size:40
 				background_color:(255,255,255,1)
 				
-
+			
+				
 			Button:
 				id:back_btn
+				pos:(5, root.height - self.height - 16)
 				disabled:True
 				background_disabled_normal: './images/back_disable.png'
 				background_normal:'./images/back.png' 
 				background_down:'./images/back.png' 
-				pos:(0, root.height - self.height)
+				size:48,48
 				size_hint: (None, None)
-				size:64,64
+				
 				
 				on_release:app.go_previous()
-	   
-
+				
+			Button:
+				id:back_home
+				pos:(root.width - self.width - 5, root.height - self.height - 16)
+				background_normal:'./images/home.png' 
+				background_down:'./images/home.png' 
+				size_hint: (None, None)
+				size:48,48
+				
+				on_release:app.go_home()	
+		
+				
+				
 		ScreenManager:
 			id: sm
 			size_hint:(1,0.8)
@@ -78,18 +90,20 @@ WindowManager:
 			size_hint:(1,0.1)
 			
 			Button:
-				id:home
-				#text:"Menu"
-				text:"Export"
+				id:data_btn
+				text:l._('data')
+				#text:u'数据' 
+				
+				#text:"Data"
 				font_size:36
 				background_normal: ''
 				background_color: '#c40e25'
-				#on_release:app.go_home()
 				on_release: app.go_data()
 			Button:
 				
 				id:set
-				text:"Settings"
+				
+				text:l._('settings')
 				font_size:36
 				background_normal: ''
 				background_color: '#c40e25'
@@ -98,6 +112,7 @@ WindowManager:
 <Exportdata>:
 	name: 'dataexport'
 	id:export_data
+	popup:popup_delete.__self__
 	canvas.before:
         Color:
             rgb: 1, 1, 1
@@ -105,6 +120,7 @@ WindowManager:
             pos: self.pos
             size: root.size
 	BoxLayout:
+		id:export_data_cont
 		orientation: 'vertical'
 		BoxLayout:
 			orientation: 'horizontal'	
@@ -120,7 +136,6 @@ WindowManager:
 			id:filechooser
 			multiselect: False
 			#dirselect: True
-			#rootpath:"F:\Python_project\Kivy\Fluorometer\Records"
 			rootpath:"/home/pi/Fluorometer/Records"
 			on_selection:export_data.selected(filechooser.selection)
 			on_submit:app.data_read(filechooser.path, filechooser.selection)
@@ -136,7 +151,7 @@ WindowManager:
 				font_size:36
 				background_normal: ''
 				background_color: '#c40e25'
-				on_release:
+				on_release:app.export_to_usb()
 			
 		BoxLayout:
 			orientation: 'horizontal'	
@@ -164,10 +179,130 @@ WindowManager:
 				background_normal: ''
 				background_color: '#c40e25'
 				on_release:
-					export_data.delete(filechooser.selection)
-					filechooser._update_files()
+					root.popup.open()
 					
-				
+		Popup:
+			id:popup_delete
+			background:'./images/button.png'
+			size_hint:.6,.2
+			on_parent:if self.parent == export_data_cont:export_data_cont.remove_widget(self)
+			title:"Are you sure to delete?"
+			title_size:24
+			title_color:'#c40e25'
+			separator_color:'#c40e25'	
+		    separator_height:'5dp'			
+			content:popup_delete_cont		
+			
+			BoxLayout:
+				id:popup_delete_cont
+				spacing:8
+				padding:10
+				Button:
+					background_normal: ''
+					background_color: '#c40e25'				
+					text:"Yes"
+					font_size:16
+					on_release:
+						export_data.delete(filechooser.selection)
+						filechooser._update_files()
+						popup_delete.dismiss()
+					
+				Button:
+					background_normal: ''
+					background_color: '#c40e25'
+					text:"Cancel"
+					font_size:16
+					on_release:popup_delete.dismiss()
+			
+					
+<SelectableLabel>:
+	id:s_label
+    # Draw a background to indicate selection
+    canvas.before:
+        Color:
+            rgba: (196/255, 14/255, 37/255, .3) if self.selected else (196/255, 14/255, 37/255, .9)
+        Rectangle:
+            pos: self.pos
+            size: self.size		
+	Label:
+        id: time
+		text:root.Time
+    Label:
+		id:assay
+        text: root.Assay
+    Label:
+        id: concentrate
+        text:root.Concentration
+	
+
+	
+<RV>:
+	bar_width: dp(20)
+	viewclass: 'SelectableLabel'	
+	SelectableRecycleBoxLayout:
+        default_size: None, dp(56)
+        default_size_hint: 1, None
+        size_hint_y: None
+        height: self.minimum_height
+        orientation: 'vertical'
+        multiselect: True
+        touch_multiselect: True
+		spacing: dp(5)
+		
+<DataRead2>:
+	name:'dataread2'
+	
+    canvas:
+        Color:
+            rgba: (255, 255, 255, 1)
+        Rectangle:
+            pos: self.pos
+            size: self.size	
+	
+	BoxLayout:
+		orientation: "vertical"
+		BoxLayout:
+			size_hint_y:0.1
+			orientation: "horizontal"
+			Label:
+				text:'Time'
+				font_size:24
+				color: '#c40e25'
+			Label:
+				text: 'Assay'
+				font_size:24
+				color: '#c40e25'
+			Label:
+				text:'Concentration'
+				font_size:24
+				color: '#c40e25'
+		RV:
+			id:rec_view
+		BoxLayout:
+			size_hint:(1,0.1)
+			orientation:'horizontal'
+			Button:
+				text:"Read"
+				font_size:36
+				background_normal: ''
+				background_color: '#c40e25'
+				#on_release:
+			Button:
+				text:"Export"
+				font_size:36
+				background_normal: ''
+				background_color: '#c40e25'
+				on_release:	root.export_selection(rec_view)
+			Button:
+				text:"Close"
+				font_size:36
+				background_normal: ''
+				background_color: '#c40e25'
+				on_release:
+					rec_view.clear_all(rec_view)
+					app.read_back()
+					
+		
 <DataRead>:
 	name:'dataread'
 	BoxLayout:
@@ -176,7 +311,7 @@ WindowManager:
 			size_hint:(1,0.9)
 			id:dataRst
 			text: 
-			show_errors: True
+			show_errors: False
 			
 		Button:
 			size_hint:(1,0.1)

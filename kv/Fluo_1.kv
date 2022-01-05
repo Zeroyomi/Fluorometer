@@ -1,0 +1,29 @@
+ShowcaseScreen:
+    name: 'Choose excitation'
+    fullscreen: True
+	BoxLayout:
+		orientation: "vertical"
+		padding:60
+		spacing:60
+		
+		Label:
+			text:l._('Fluo_1')
+			color: '#c40e25'
+			font_size:36
+			
+		Button:
+			text:"Blue"
+			font_size:30
+			background_normal: ''
+			background_color: '#c40e25'
+			on_release: 
+				app.Fluorometer_type = 'Blue'
+				app.go_screen('Fluorometer')
+		Button:
+			text:"Red"
+			font_size:30
+			background_normal: ''
+			background_color: '#c40e25'
+			on_release: 
+				app.Fluorometer_type = 'Red'
+				app.go_screen('Fluorometer')

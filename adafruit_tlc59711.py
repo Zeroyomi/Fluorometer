@@ -295,3 +295,7 @@ class TLC59711:
         # Write out new values if in auto_show state.
         if self.auto_show:
             self._write()
+
+    @property
+    def bcr(self):
+        return self._bcr

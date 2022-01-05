@@ -11,12 +11,19 @@ ShowcaseScreen:
 			Label:
 				text:"Result"
 				font_size:36
-				
+				color: '#c40e25'
 			Label:
 				id:DNA_result
 				#text:'{}'.format(app.DNA_result)
 				text:app.DNA_result
 				font_size:36
+				color: '#c40e25'
+				
+			Label:
+				id:DNA_result_real
+				text:app.DNA_result_real
+				font_size:48
+				color: '#c40e25'	
 				
 		BoxLayout:	
 			size_hint:1,0.2
@@ -26,4 +33,8 @@ ShowcaseScreen:
 			Button:
 				text:"Read tube"
 				font_size:30
-				on_release:app.read_tube()
+				background_normal: ''
+				background_color: '#c40e25'
+				on_release:
+					app.read_AccuClear_tube() if app.DNA_type == 'AccuClear' else \ 
+					app.read_AccuGreen_tube()

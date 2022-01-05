@@ -1,0 +1,26 @@
+ShowcaseScreen:
+    name: 'Instrument'
+    #fullscreen: True
+
+    BoxLayout:
+		orientation: "vertical"
+		padding:100
+		spacing:200
+
+        Button:
+			font_size:30
+            text: 'English'
+			background_normal: ''
+			background_color: '#c40e25'
+			size_hint:1,0.5
+            on_release: 
+				l.lang="en"
+        Button:
+			font_size:30
+			background_normal: ''
+			background_color: '#c40e25'
+            text: '中文'
+			size_hint:1,0.5
+            on_release: 
+				l.lang="cn"
+		

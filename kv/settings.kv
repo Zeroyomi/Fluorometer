@@ -1,5 +1,5 @@
 <SettingsButton@Button>:
-	font_size:28
+	font_size:30
 	#background_normal:''
 	#background_color:'A0A0A0'
 	background_normal: ''
@@ -17,7 +17,7 @@ ShowcaseScreen:
 		spacing:50
 
         SettingsButton:
-            text: 'Instrument settings'
+            text: l._('Instrument Settings')
             on_release: on_press:app.go_screen('Instrument')
 		
 		SettingsButton:
@@ -36,6 +36,6 @@ ShowcaseScreen:
             #text: 'ADC diff'
             #on_release: app.adc_diff()	
 		
-		SettingsButton:
-            text: 'Time test'
-            on_release: app.time_test_flo_always_on()		
+		#SettingsButton:
+            #text: 'Time test'
+            #on_release: app.time_test_flo_always_on()		

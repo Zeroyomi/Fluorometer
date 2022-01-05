@@ -1,0 +1,30 @@
+ShowcaseScreen:
+    name: 'DNA Choose'
+    fullscreen: True
+	BoxLayout:
+		orientation: "vertical"
+		padding:60
+		spacing:60
+		
+		Label:
+			text:"Please choose type"
+			color: '#c40e25'
+			font_size:36
+			
+		Button:
+			text:"AccuClear"
+			font_size:30
+			background_normal: ''
+			background_color: '#c40e25'
+			on_release: 
+				app.DNA_type = 'AccuClear'
+				app.go_screen('Read DNA')
+		Button:
+			text:"AccuGreen"
+			font_size:30
+			background_normal: ''
+			background_color: '#c40e25'
+			on_release: 
+				app.DNA_type = 'AccuGreen'
+				app.go_screen('Read DNA')
+	

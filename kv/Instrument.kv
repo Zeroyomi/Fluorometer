@@ -8,7 +8,7 @@ ShowcaseScreen:
 		spacing:30
 
         SettingsButton:
-            text: 'Brightness'
+            text: l._('brightness')
             on_release: app.go_screen('brightness')
 			
         SettingsButton:
@@ -24,5 +24,5 @@ ShowcaseScreen:
             on_release: 
 			
 		SettingsButton:
-            text: 'Reserved'
-            on_release: 	
+            text: l._('language')
+            on_release: app.go_screen('language') 	

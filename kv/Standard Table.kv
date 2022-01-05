@@ -6,43 +6,91 @@ ShowcaseScreen:
 		padding:10
 		spacing:20
 		BoxLayout:	
-			size_hint:1,0.8
+			spacing:20
+			padding:20
+			orientation: "vertical"
+			size_hint:1,0.2
 			Label:
-				text:"Standard Table"
-				font_size:36	
-				color:0, 0, 0, 1 
-		Graph:
-			id: plot_dna
-			size_hint_x:.6
-			pos_hint:{"x":.2}
-            xlabel: "Omec tube concentration(μg/mL)"
-            ylabel: "RFUs" 
-			x_ticks_minor:5
-			x_ticks_major:100
-			y_ticks_major:50
-			y_grid_label:False
-			x_grid_label:True
-			padding:5
-			x_grid:True
-			y_grid:False
-			xmin:0
-			xmax:600
-			ymin:0 
-			ymax:200	
+				size_hint:1,0.3
+				id:DNA_type
+				text:app.DNA_type
+				color: '#c40e25'
+				font_size:24		
+			Label:
+				size_hint:1,0.3
+				text:"RFU Values"
+				font_size:24	
+				color: '#c40e25'
+			
+	
+			BoxLayout:
+				size_hint:1,0.4
+				orientation:"horizontal"
+				Label:
+					text_size: self.size
+					halign:'left'
+					valign: 'middle'
+					font_size:20	
+					color: '#c40e25'
+					text:'Std1'
+					
+				Label:
+					text_size: self.size
+					halign:'left'
+					valign: 'middle'
+					font_size:20	
+					color: '#c40e25'
+					#text:app.DNA_standard_1
+					text:'50'
+
+				Label:
+					text_size: self.size
+					halign:'right'
+					valign: 'middle'
+					font_size:20	
+					color: '#c40e25'
+					text:'Std2'
+				Label:
+					text_size: self.size
+					halign:'right'
+					valign: 'middle'
+					font_size:20	
+					color: '#c40e25'
+					#text:app.DNA_standard_1
+					text:'500'
+		#Graph:
+			#id: plot_dna
+			#size_hint_x:.6
+			#pos_hint:{"x":.2}
+			#color: '#c40e25'
+            #xlabel: "Omec tube concentration(μg/mL)"
+            #ylabel: "RFUs" 
+			#x_ticks_minor:5
+			#x_ticks_major:100
+			#y_ticks_major:50
+			#y_grid_label:False
+			#x_grid_label:True
+			#padding:5
+			#x_grid:True
+			#y_grid:False
+			#xmin:0
+			#xmax:600
+			#ymin:0 
+			#ymax:200	
+			
+		BoxLayout:
+			id:table_dna
+			size_hint:1,0.65
 			
 		BoxLayout:	
-			size_hint:1,0.2
+			size_hint:1,0.15
 			spacing:40
+			padding:20
 			orientation: "horizontal"
-			Button:
-				text:"Cancel"
-				font_size:20
-				background_normal: ''
-				background_color: '#c40e25'
-				on_release:app.go_previous()
+			
 				
 			Button:
-				text:"Read New Standard"
+				text:"New Standard"
 				font_size:20
 				background_normal: ''
 				background_color: '#c40e25'
@@ -51,5 +99,11 @@ ShowcaseScreen:
 					del app.hierarchy_index[-1]
 					app.go_screen('Read Standard')
 			
-		
+			Button:
+				text:"Done"
+				font_size:20
+				background_normal: ''
+				background_color: '#c40e25'
+				on_release:
+					app.go_screen('Read DNA')
 		

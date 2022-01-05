@@ -82,27 +82,13 @@ ShowcaseScreen:
 				background_down:'./images/LED_off_press.png' 
 				on_release: app.adc_aver()
 			Button:
+				
 				text:"C"
 				font_size:30
 				color:0,0,0,1
 				background_normal:'./images/LED.png'
 				background_down:'./images/LED_press.png' 
 				on_release: app.adc_aver_with_led()
-			
-			#Button:
-				#id:LED_current
-				#text:"C"
-				#font_size:30
-				#on_release: app.read_led_current()	
-			#Button:
-				#text:"Blink"
-				#font_size:30
-				#on_release: app.adc_aver_with_blink()
-				
-			#Button:
-				#text:"Blink Sub"
-				#font_size:30
-				#on_release: app.adc_aver_with_blink_sub()	
 				
 			Button:
 				#text:"Blink Sub"
@@ -129,7 +115,7 @@ ShowcaseScreen:
 				font_size:18	
 			Label:
 				id:record
-				text:app.record_name
+				text:app.Fluorometer_type
 				color:'FF8000'
 				font_size:18 			
 			Label:
@@ -151,7 +137,7 @@ ShowcaseScreen:
 					elif s_gain.text == "16": app.adc_gain = '16'
 					
 			Button:
-				text:"Record"
+				text:"Excitation"
 				font_size:18
 				background_normal: ''
 				background_color: '#c40e25'
